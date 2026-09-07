@@ -12,7 +12,7 @@
 
 ## Cardmarket Price Updater
 
-#### Copyright © Charlie Howard 2026 All rights reserved.
+**_Copyright © Charlie Howard 2025-2026 All rights reserved_**
 
 A C# based GUI/CLI that gets prices from [Cardmarket](https://www.cardmarket.com/en) based on spreadsheet contents for collection value purposes in GBP (£), EUR (€) or USD ($).
 

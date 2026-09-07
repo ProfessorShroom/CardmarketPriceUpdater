@@ -1,0 +1,30 @@
+name: Update Copyright Year
+
+on:
+  schedule:
+    - cron: '0 2 1 1 *'
+  workflow_dispatch:
+
+jobs:
+  update-copyright:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Update copyright year range in README.md
+        run: |
+          CURRENT_YEAR=$(date +%Y)
+          # Searches for 'Copyright © Charlie Howard 2025-[4 digits]' and updates the end year
+          sed -i "s/Copyright © Charlie Howard 2025-[0-9]\{4\}/Copyright © Charlie Howard 2025-$CURRENT_YEAR/g" README.md
+
+      - name: Commit and push changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add README.md
+          # Only commit if changes were actually made
+          git diff --staged --quiet || (git commit -m "chore: update copyright year range to 2025-$(date +%Y)" && git push)
