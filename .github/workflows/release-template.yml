@@ -1,0 +1,25 @@
+name: Release Template
+
+on:
+  push:
+    tags:
+      - 'v*.*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  attach-template:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Upload to the release
+        uses: softprops/action-gh-release@v3
+        with:
+          name: "Cardmarket Price Updater ${{ github.ref_name }}"
+          files: Template.xlsx
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

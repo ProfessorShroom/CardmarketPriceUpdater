@@ -142,8 +142,9 @@ Run the executable from a terminal using these commands for headless use (same o
 
 #### Latest Update
 
-**Version 2.0.3.1 / 2.0.3.0**
+**Version 2.0.3.2 / 2.0.3.1 / 2.0.3.0**
 
+- **_2.0.3.2_** Fixed Flatpak crash due to missing argument in dotnot build command.
 - **_2.0.3.1_** Fixed the Linux CLI release workflow failing with a 403 - it was missing the `contents: write` permission the other two release workflows already had, so it couldn't create/attach to the release.
 - **_2.0.3.1_** Moved `update.xml` back to the repo root (pre-2.0 installs expect it there) and updated the update-checker URL, docs, and project layout references to match.
 - **_2.0.3.1_** Fixed a few leftover references to the old hyphenated repo name (`Cardmarket-Price-Updater`) in the README and update-checker URL, pointing them at the current `CardmarketPriceUpdater`.
