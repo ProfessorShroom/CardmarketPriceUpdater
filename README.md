@@ -40,16 +40,16 @@ curl -sL https://github.com/ProfessorShroom/CardmarketPriceUpdater/releases/late
 
 ### Installation (Linux CLI / headless)
 
-For headless servers, or anywhere you just want the CLI with no Flatpak, GUI runtime, or display required, grab the self-contained Linux binary instead:
+For headless servers, or anywhere you just want the CLI with no Flatpak, GUI runtime, or display required, grab the self-contained Linux binary and install it directly to your system's PATH:
 
 ```bash
-curl -sL https://github.com/ProfessorShroom/CardmarketPriceUpdater/releases/latest/download/CardmarketPriceUpdater-linux-x64.tar.gz -o CardmarketPriceUpdater-linux-x64.tar.gz && mkdir -p CardmarketPriceUpdater && tar -xzf CardmarketPriceUpdater-linux-x64.tar.gz -C CardmarketPriceUpdater && rm CardmarketPriceUpdater-linux-x64.tar.gz
+curl -sL https://github.com/ProfessorShroom/CardmarketPriceUpdater/releases/latest/download/CardmarketPriceUpdater-linux-x64.tar.gz -o /tmp/CardmarketPriceUpdater.tar.gz && mkdir -p ~/.local/bin ~/.local/share/CardmarketPriceUpdater && tar -xzf /tmp/CardmarketPriceUpdater.tar.gz -C ~/.local/share/CardmarketPriceUpdater && mv ~/.local/share/CardmarketPriceUpdater/Cardmarket-Price-Updater ~/.local/bin/CardmarketPriceUpdater && chmod +x ~/.local/bin/CardmarketPriceUpdater && rm /tmp/CardmarketPriceUpdater.tar.gz
 ```
 
-Then run it directly - see [CLI Usage](#cli-usage) below for the available flags:
+Then run from anywhere - see [CLI Usage](#cli-usage) below for the available flags:
 
 ```bash
-./CardmarketPriceUpdater/Cardmarket-Price-Updater /f ./Template.xlsx
+CardmarketPriceUpdater /f ./Template.xlsx
 ```
 
 ### Project layout

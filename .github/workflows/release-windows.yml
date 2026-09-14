@@ -32,12 +32,12 @@ jobs:
       - name: Stage executable
         shell: pwsh
         run: |
-          Copy-Item "publish-win-x64/Cardmarket-Price-Updater.exe" "Cardmarket-Price-Updater.exe"
+          Copy-Item "publish-win-x64/Cardmarket-Price-Updater.exe" "CardmarketPriceUpdater.exe"
 
       - name: Upload to the release
         uses: softprops/action-gh-release@v3
         with:
           name: "Cardmarket Price Updater ${{ github.ref_name }}"
-          files: Cardmarket-Price-Updater.exe
+          files: CardmarketPriceUpdater.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

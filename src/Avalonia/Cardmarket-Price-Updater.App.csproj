@@ -10,10 +10,10 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
 
-    <Version>2.0.3.2</Version>
-    <AssemblyVersion>2.0.3.2</AssemblyVersion>
-    <FileVersion>2.0.3.2</FileVersion>
-    <InformationalVersion>2.0.3.2</InformationalVersion>
+    <Version>2.0.3.3</Version>
+    <AssemblyVersion>2.0.3.3</AssemblyVersion>
+    <FileVersion>2.0.3.3</FileVersion>
+    <InformationalVersion>2.0.3.3</InformationalVersion>
 
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
