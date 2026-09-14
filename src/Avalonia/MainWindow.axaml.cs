@@ -66,7 +66,7 @@ namespace Cardmarket_Price_Updater
         {
             var current = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
             var update = await UpdateChecker.CheckAsync(
-                "https://raw.githubusercontent.com/ProfessorShroom/Cardmarket-Price-Updater/refs/heads/main/packaging/windows/update.xml",
+                "https://raw.githubusercontent.com/ProfessorShroom/CardmarketPriceUpdater/refs/heads/main/update.xml",
                 current);
 
             if (update is null) return;

@@ -18,7 +18,7 @@ A C# based GUI/CLI that gets prices from [Cardmarket](https://www.cardmarket.com
 
 Currently supports Magic: The Gathering, Pokémon and Yu-Gi-Oh!
 
-[Current Release Download](https://github.com/ProfessorShroom/Cardmarket-Price-Updater/releases)
+[Current Release Download](https://github.com/ProfessorShroom/CardmarketPriceUpdater/releases)
 
 At the moment, the cardmarket ID is manual, but when Cardmarket open up their API again, I will try to automate it.
 
@@ -28,6 +28,7 @@ The prices are based on an average of everything, so 1st Edition and Unlimited, 
 
 - **Windows** - Self-contained exe
 - **Ubuntu / Fedora** - via Flatpak
+- **Headless / any Linux x86_64** - self-contained CLI binary (no Flatpak, GUI runtime, or display required)
 
 ### Installation & Updating (Linux via Flatpak)
 
@@ -37,12 +38,27 @@ To install or update to the latest release, run this command in your terminal:
 curl -sL https://github.com/ProfessorShroom/CardmarketPriceUpdater/releases/latest/download/CardmarketPriceUpdater.flatpak -o CardmarketPriceUpdater.flatpak && flatpak install --user --assumeyes ./CardmarketPriceUpdater.flatpak && rm CardmarketPriceUpdater.flatpak
 ```
 
+### Installation (Linux CLI / headless)
+
+For headless servers, or anywhere you just want the CLI with no Flatpak, GUI runtime, or display required, grab the self-contained Linux binary instead:
+
+```bash
+curl -sL https://github.com/ProfessorShroom/CardmarketPriceUpdater/releases/latest/download/CardmarketPriceUpdater-linux-x64.tar.gz -o CardmarketPriceUpdater-linux-x64.tar.gz && mkdir -p CardmarketPriceUpdater && tar -xzf CardmarketPriceUpdater-linux-x64.tar.gz -C CardmarketPriceUpdater && rm CardmarketPriceUpdater-linux-x64.tar.gz
+```
+
+Then run it directly - see [CLI Usage](#cli-usage) below for the available flags:
+
+```bash
+./CardmarketPriceUpdater/Cardmarket-Price-Updater /f ./Template.xlsx
+```
+
 ### Project layout
 
 ```
 src/Core/       - shared logic: price lookup, FX conversion, retry/backoff, config, backups
 src/Avalonia/   - the app itself (GUI + CLI entry point), one codebase for Windows and Linux
-packaging/      - Flatpak manifest for Linux, update.xml for the Windows auto-updater
+packaging/      - Flatpak manifest for Linux
+update.xml      - version-check file for the Windows auto-updater
 Template.xlsx   - starter spreadsheet
 ```
 
@@ -126,11 +142,14 @@ Run the executable from a terminal using these commands for headless use (same o
 
 #### Latest Update
 
-**Version 2.0.3.0**
+**Version 2.0.3.1 / 2.0.3.0**
 
-- Added a self-contained Linux `linux-x64` CLI build, published alongside the exe and Flatpak on every release - lets headless/server users run the CLI directly with no Flatpak, GUI runtime, or display required.
-- Releases are now fully automated: pushing a version tag (`vx.x.x.x`) builds and attaches the Windows exe, the Flatpak bundle, and the Linux CLI tarball to the release, no manual upload needed.
-- Fixed `packaging/flatpak/io.github.professorshroom.CardmarketPriceUpdater.yml` - it was still cloning an old hyphenated repo name pinned to `v2.0.2.0` instead of building from your local checkout. It now builds from a local publish output, matching what the packaging docs always said it did.
+- **_2.0.3.1_** Fixed the Linux CLI release workflow failing with a 403 - it was missing the `contents: write` permission the other two release workflows already had, so it couldn't create/attach to the release.
+- **_2.0.3.1_** Moved `update.xml` back to the repo root (pre-2.0 installs expect it there) and updated the update-checker URL, docs, and project layout references to match.
+- **_2.0.3.1_** Fixed a few leftover references to the old hyphenated repo name (`Cardmarket-Price-Updater`) in the README and update-checker URL, pointing them at the current `CardmarketPriceUpdater`.
+- **_2.0.3.0_** Added a self-contained Linux `linux-x64` CLI build, published alongside the exe and Flatpak on every release - lets headless/server users run the CLI directly with no Flatpak, GUI runtime, or display required.
+- **_2.0.3.0_** Releases are now fully automated: pushing a version tag (`vx.x.x.x`) builds and attaches the Windows exe, the Flatpak bundle, and the Linux CLI tarball to the release, no manual upload needed.
+- **_2.0.3.0_** Fixed `packaging/flatpak/io.github.professorshroom.CardmarketPriceUpdater.yml` - it was still cloning an old hyphenated repo name pinned to `v2.0.2.0` instead of building from your local checkout. It now builds from a local publish output, matching what the packaging docs always said it did.
 
 #### Older Updates
 

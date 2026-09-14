@@ -11,11 +11,11 @@ Update checking no longer uses AutoUpdater.NET.Official - that package depends
 on System.Windows.Forms, which forces the whole project onto the
 `net8.0-windows` target framework and makes a Linux build impossible.
 Instead, `Core/UpdateChecker.cs` is a small dependency-free class that reads
-the same `packaging/windows/update.xml` format over plain HTTP and compares
-versions. The behaviour is different from before: it no longer silently
-downloads and replaces the running executable, it just shows a "new version
-available" link in the GUI that opens the download page. Bump the
-`<version>`/`<url>` fields in `update.xml` on release the same way as
+the same `update.xml` (now at the repo root) format over plain HTTP and
+compares versions. The behaviour is different from before: it no longer
+silently downloads and replaces the running executable, it just shows a
+"new version available" link in the GUI that opens the download page. Bump
+the `<version>`/`<url>` fields in `update.xml` on release the same way as
 before.
 
 ## Linux (raw binary, no packaging)
