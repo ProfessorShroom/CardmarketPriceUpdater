@@ -126,14 +126,20 @@ Run the executable from a terminal using these commands for headless use (same o
 
 #### Latest Update
 
-**Version 2.0.2.0**
+**Version 2.0.3.0**
 
-- Removed Flathub compliance, it's too strict and not worth the hassle.
+- Added a self-contained Linux `linux-x64` CLI build, published alongside the exe and Flatpak on every release - lets headless/server users run the CLI directly with no Flatpak, GUI runtime, or display required.
+- Releases are now fully automated: pushing a version tag (`vx.x.x.x`) builds and attaches the Windows exe, the Flatpak bundle, and the Linux CLI tarball to the release, no manual upload needed.
+- Fixed `packaging/flatpak/io.github.professorshroom.CardmarketPriceUpdater.yml` - it was still cloning an old hyphenated repo name pinned to `v2.0.2.0` instead of building from your local checkout. It now builds from a local publish output, matching what the packaging docs always said it did.
 
 #### Older Updates
 
 <details markdown="1">
 <summary><strong>Version 2.x - The .NET 8 / Avalonia Update</strong></summary>
+
+**Version 2.0.2.0**
+
+- Removed Flathub compliance, it's too strict and not worth the hassle.
 
 **Version 2.0.1.0**
 

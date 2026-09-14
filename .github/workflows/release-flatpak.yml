@@ -1,0 +1,92 @@
+name: Release Flatpak
+
+on:
+  push:
+    tags:
+      - 'v*.*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish self-contained linux-x64
+        run: |
+          dotnet publish src/Avalonia/Cardmarket-Price-Updater.App.csproj \
+            -c Release -r linux-x64 \
+            --self-contained true \
+            -o publish-linux-x64
+
+      - name: Install flatpak-builder
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak install --system --noninteractive flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
+
+      # Builds from the binary published above rather than the committed
+      # packaging/flatpak manifest, which currently clones a hardcoded tag
+      # (v2.0.2.0) from an old hyphenated repo URL - worth fixing separately,
+      # but this sidesteps it and always packages exactly what was tagged.
+      - name: Write Flatpak manifest
+        run: |
+          cat > ci-manifest.yml <<'EOF'
+          id: io.github.professorshroom.CardmarketPriceUpdater
+          runtime: org.freedesktop.Platform
+          runtime-version: '25.08'
+          sdk: org.freedesktop.Sdk
+          command: Cardmarket-Price-Updater
+          finish-args:
+            - --share=network
+            - --share=ipc
+            - --socket=wayland
+            - --socket=fallback-x11
+            - --device=dri
+            - --filesystem=home
+          modules:
+            - name: cardmarket-price-updater
+              buildsystem: simple
+              build-commands:
+                - install -Dm755 publish-linux-x64/Cardmarket-Price-Updater /app/bin/Cardmarket-Price-Updater
+                - install -Dm644 desktop-file /app/share/applications/io.github.professorshroom.CardmarketPriceUpdater.desktop
+                - install -Dm644 appdata-file /app/share/metainfo/io.github.professorshroom.CardmarketPriceUpdater.appdata.xml
+                - install -Dm644 icon-file /app/share/icons/hicolor/256x256/apps/io.github.professorshroom.CardmarketPriceUpdater.png
+              sources:
+                - type: dir
+                  path: publish-linux-x64
+                  dest: publish-linux-x64
+                - type: file
+                  path: packaging/flatpak/io.github.professorshroom.CardmarketPriceUpdater.desktop
+                  dest-filename: desktop-file
+                - type: file
+                  path: packaging/flatpak/io.github.professorshroom.CardmarketPriceUpdater.appdata.xml
+                  dest-filename: appdata-file
+                - type: file
+                  path: packaging/flatpak/app-icon-256.png
+                  dest-filename: icon-file
+          EOF
+
+      - name: Build Flatpak
+        run: flatpak-builder --force-clean --repo=repo build-dir ci-manifest.yml
+
+      - name: Create bundle
+        run: flatpak build-bundle repo CardmarketPriceUpdater.flatpak io.github.professorshroom.CardmarketPriceUpdater
+
+      - name: Upload to the release
+        uses: softprops/action-gh-release@v3
+        with:
+          name: "Cardmarket Price Updater ${{ github.ref_name }}"
+          files: CardmarketPriceUpdater.flatpak
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

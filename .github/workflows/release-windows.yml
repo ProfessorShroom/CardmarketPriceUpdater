@@ -1,0 +1,43 @@
+name: Release Windows Build
+
+on:
+  push:
+    tags:
+      - 'v*.*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish self-contained win-x64
+        run: |
+          dotnet publish src/Avalonia/Cardmarket-Price-Updater.App.csproj `
+            -c Release -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -o publish-win-x64
+
+      - name: Stage executable
+        shell: pwsh
+        run: |
+          Copy-Item "publish-win-x64/Cardmarket-Price-Updater.exe" "Cardmarket-Price-Updater.exe"
+
+      - name: Upload to the release
+        uses: softprops/action-gh-release@v3
+        with:
+          name: "Cardmarket Price Updater ${{ github.ref_name }}"
+          files: Cardmarket-Price-Updater.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
