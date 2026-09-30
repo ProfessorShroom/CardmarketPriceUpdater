@@ -16,6 +16,7 @@ namespace Cardmarket_Price_Updater
         private static bool quiet = false;
         private static string? logFile = null;
         private static CurrencyMode currencyMode = CurrencyMode.AUTO;
+        private static GameType? gameOverride = null;
 
         static void Log(string msg)
         {
@@ -141,9 +142,15 @@ namespace Cardmarket_Price_Updater
                         _ => CurrencyMode.AUTO
                     };
                 }
+                if (arg == "/g" && i + 1 < args.Length)
+                {
+                    gameOverride = GameTypeExtensions.ParseGame(args[i + 1]);
+                    if (gameOverride is null)
+                        Log($"Unrecognised game \"{args[i + 1]}\" for /g (use m, p or y) - using {config.DefaultGame.DisplayName()}.");
+                }
             }
 
-            var updater = new PriceUpdater(Log, config, currencyMode);
+            var updater = new PriceUpdater(Log, config, currencyMode, null, gameOverride);
 
             List<string> files = new();
             if (!string.IsNullOrWhiteSpace(file)) files.Add(file);

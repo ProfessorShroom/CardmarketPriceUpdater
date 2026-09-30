@@ -3,7 +3,7 @@
         x:Class="Cardmarket_Price_Updater.MainWindow"
         Title="Cardmarket Price Updater"
         Width="800" Height="500"
-        MinWidth="620" MinHeight="380"
+        MinWidth="720" MinHeight="380"
         Background="#1E1E1E"
         Icon="/Assets/app-icon.ico">
 
@@ -70,7 +70,7 @@
 
   <DockPanel>
     <Border DockPanel.Dock="Top" Background="#282828" Padding="12,10">
-      <Grid ColumnDefinitions="Auto,10,Auto,Auto,Auto,10,Auto,*,Auto">
+      <Grid ColumnDefinitions="Auto,10,Auto,Auto,Auto,10,Auto,8,Auto,*,Auto">
         <Button x:Name="StartButton" Grid.Column="0" Classes="flat" Content="Get Prices (Browse Files)" />
 
         <ToggleButton x:Name="CurrencyGbp" Grid.Column="2" Classes="currency" Content="£" IsChecked="True" />
@@ -79,7 +79,10 @@
 
         <ComboBox x:Name="PriceTypeCombo" Grid.Column="6" Width="170" />
 
-        <Button x:Name="CloseButton" Grid.Column="8" Classes="flat" Content="Close" />
+        <ComboBox x:Name="GameCombo" Grid.Column="8" Width="190"
+                  ToolTip.Tip="Game to use when the spreadsheet has no Game column (or a blank Game cell)" />
+
+        <Button x:Name="CloseButton" Grid.Column="10" Classes="flat" Content="Close" />
       </Grid>
     </Border>
 

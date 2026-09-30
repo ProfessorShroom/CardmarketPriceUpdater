@@ -64,13 +64,13 @@ Template.xlsx   - starter spreadsheet
 
 ### Usage
 
-Use the included Template.xlsx. The only 3 columns that are required are Card Price, Price Updated, and Cardmarket ID. The other columns are just there for you.
+Use the included Template.xlsx. The only 3 columns that are required are Card Price, Price Updated, and Cardmarket ID (Game is optional, see below). The other columns are just there for you.
 
 The template has 4 prefilled rows to show you how to fill it out.
 
 Release Date isn't required, it's just for you. So you know when a card/set was released.
 
-Game is so the program knows which card game to compare prices to, at the moment you can select MTG (Magic: The Gathering), Pokémon or Yu-Gi-Oh!
+Game is so the program knows which card game to compare prices to, at the moment you can select MTG (Magic: The Gathering), Pokémon or Yu-Gi-Oh! It's optional: if there's no Game column (or a row's Game cell is blank/unrecognised), the program uses the default game, which is Yu-Gi-Oh! unless you pick another one in the app's game dropdown or with `/g` on the CLI. Only the price guides for the games actually in your sheet are downloaded.
 
 Set Name isn't required, but is just so you know what set that card is from, if, for example, the card has been released in multiple sets.
 
@@ -100,18 +100,19 @@ Downloads (price guide + FX rate) automatically retry a few times with a short b
 
 ### Config file
 
-Your last-used currency and price type are remembered automatically. Retry and backup settings live in a small JSON config file:
+Your last-used currency, price type and default game are remembered automatically. Retry and backup settings live in a small JSON config file:
 
 - Windows: `%AppData%\CardmarketPriceUpdater\config.json`
 - Linux: `~/.config/CardmarketPriceUpdater/config.json` (or the Flatpak-sandboxed equivalent)
 
 ```json
 {
-  "CurrencyMode": "AUTO",
-  "PriceType": "avg30",
-  "MaxRetries": 3,
-  "RetryDelaySeconds": 2,
-  "BackupRetentionCount": 5
+  "currencyMode": "AUTO",
+  "priceType": "avg30",
+  "defaultGame": "YuGiOh",
+  "maxRetries": 3,
+  "retryDelaySeconds": 2,
+  "backupRetentionCount": 5
 }
 ```
 
@@ -125,6 +126,7 @@ Run the executable from a terminal using these commands for headless use (same o
 - /d to specify a directory, this will run through every .xlsx in that directory, for example: `./Cardmarket-Price-Updater /d ./`
 - /r combined with /d, also searches subdirectories
 - /c to specify a currency, by default it's set to auto which will use GBP, for example: `./Cardmarket-Price-Updater /c e /f ./Template.xlsx` (`/c e` is EUR €, `/c p` is GBP £, `/c u` is USD $)
+- /g to specify the game used when the spreadsheet has no Game column (or a blank Game cell), for example: `./Cardmarket-Price-Updater /g p /f ./Template.xlsx` (`/g y` is Yu-Gi-Oh!, `/g m` is Magic: The Gathering, `/g p` is Pokémon; defaults to Yu-Gi-Oh!)
 - /log to log output to a file, for example: `./Cardmarket-Price-Updater /f ./Template.xlsx /log ./log.txt`
 - /q, /quiet, /s, /silent all allow you to run silently with no console output at all, for example `./Cardmarket-Price-Updater /f ./Template.xlsx /s`
 
@@ -142,6 +144,19 @@ Run the executable from a terminal using these commands for headless use (same o
 
 #### Latest Update
 
+**Version 2.1.0.0**
+
+- **_2.1.0.0_** The `Game` column is now optional. If a sheet has no Game column, every row uses the default game, which is Yu-Gi-Oh! unless you choose another.
+- **_2.1.0.0_** Added a game dropdown to the GUI and a `/g` flag to the CLI (`/g y` Yu-Gi-Oh!, `/g m` Magic: The Gathering, `/g p` Pokémon) to choose the default game. The choice is remembered as `defaultGame` in the config file.
+- **_2.1.0.0_** Prices are now checked against the correct game for each row instead of all three games at once, and only the price guides for games actually in your sheet are downloaded. Blank or unrecognised Game cells fall back to the default game.
+- **_2.1.0.0_** Fixed a temp file being left behind when the required column headers could not be found.
+- **_2.1.0.0_** Fixed the README config example using the wrong (PascalCase) key names.
+
+#### Older Updates
+
+<details markdown="1">
+<summary><strong>Version 2.x - The .NET 8 / Avalonia Update</strong></summary>
+
 **Version 2.0.3.2 / 2.0.3.1 / 2.0.3.0**
 
 - **_2.0.3.2_** Fixed Flatpak crash due to missing argument in dotnot build command.
@@ -151,11 +166,6 @@ Run the executable from a terminal using these commands for headless use (same o
 - **_2.0.3.0_** Added a self-contained Linux `linux-x64` CLI build, published alongside the exe and Flatpak on every release - lets headless/server users run the CLI directly with no Flatpak, GUI runtime, or display required.
 - **_2.0.3.0_** Releases are now fully automated: pushing a version tag (`vx.x.x.x`) builds and attaches the Windows exe, the Flatpak bundle, and the Linux CLI tarball to the release, no manual upload needed.
 - **_2.0.3.0_** Fixed `packaging/flatpak/io.github.professorshroom.CardmarketPriceUpdater.yml` - it was still cloning an old hyphenated repo name pinned to `v2.0.2.0` instead of building from your local checkout. It now builds from a local publish output, matching what the packaging docs always said it did.
-
-#### Older Updates
-
-<details markdown="1">
-<summary><strong>Version 2.x - The .NET 8 / Avalonia Update</strong></summary>
 
 **Version 2.0.2.0**
 

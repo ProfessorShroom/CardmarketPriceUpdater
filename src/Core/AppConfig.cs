@@ -15,6 +15,9 @@ namespace Cardmarket_Price_Updater.Core
         [JsonPropertyName("priceType")]
         public PriceType PriceType { get; set; } = PriceType.avg30;
 
+        [JsonPropertyName("defaultGame")]
+        public GameType DefaultGame { get; set; } = GameTypeExtensions.Default;
+
         [JsonPropertyName("maxRetries")]
         public int MaxRetries { get; set; } = 3;
 

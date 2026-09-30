@@ -21,6 +21,7 @@ namespace CardPriceUpdaterGui
         private readonly int _maxRetries;
         private readonly double _retryDelaySeconds;
         private readonly int _backupRetentionCount;
+        private readonly GameType _defaultGame;
 
         public PriceUpdater(
             Action<string>? log = null,
@@ -28,7 +29,8 @@ namespace CardPriceUpdaterGui
             PriceType priceType = PriceType.avg30,
             int maxRetries = 3,
             double retryDelaySeconds = 2,
-            int backupRetentionCount = 5)
+            int backupRetentionCount = 5,
+            GameType defaultGame = GameTypeExtensions.Default)
         {
             _log = log;
             _mode = mode;
@@ -36,16 +38,18 @@ namespace CardPriceUpdaterGui
             _maxRetries = maxRetries;
             _retryDelaySeconds = retryDelaySeconds;
             _backupRetentionCount = backupRetentionCount;
+            _defaultGame = defaultGame;
         }
 
-        public PriceUpdater(Action<string>? log, AppConfig config, CurrencyMode? modeOverride = null, PriceType? priceTypeOverride = null)
+        public PriceUpdater(Action<string>? log, AppConfig config, CurrencyMode? modeOverride = null, PriceType? priceTypeOverride = null, GameType? gameOverride = null)
             : this(
                 log,
                 modeOverride ?? config.CurrencyMode,
                 priceTypeOverride ?? config.PriceType,
                 config.MaxRetries,
                 config.RetryDelaySeconds,
-                config.BackupRetentionCount)
+                config.BackupRetentionCount,
+                gameOverride ?? config.DefaultGame)
         {
         }
 
@@ -54,11 +58,11 @@ namespace CardPriceUpdaterGui
             _log?.Invoke($"[{DateTime.Now:HH:mm:ss}] {msg}");
         }
 
-        private static readonly string[] PRICE_GUIDE_URLS =
+        private static readonly Dictionary<GameType, string> PRICE_GUIDE_URLS = new()
         {
-            "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json",
-            "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_3.json",
-            "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json"
+            [GameType.MTG] = "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json",
+            [GameType.YuGiOh] = "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_3.json",
+            [GameType.Pokemon] = "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json"
         };
 
         private const string FX_API_URL =
@@ -72,97 +76,138 @@ namespace CardPriceUpdaterGui
 
             CreateRotatingBackup(workbookPath);
 
-            using var http = new HttpClient();
-
-            var docs = RetryPolicy.RunAsync(
-                () => DownloadPriceGuidesAsync(http, PRICE_GUIDE_URLS),
-                _maxRetries, _retryDelaySeconds, _log, "Price guide download").Result;
-            var map = BuildPriceMap(docs);
-
-            decimal fx = 1m;
-            bool convert = true;
-            string targetSymbol = "GBP";
-
-            switch (_mode)
-            {
-                case CurrencyMode.AUTO:
-                    try
-                    {
-                        var rates = GetFxRatesAsync(http).Result;
-                        fx = rates["GBP"];
-                        targetSymbol = "GBP";
-                        Log($"AUTO FX: 1 EUR = {fx} GBP");
-                    }
-                    catch
-                    {
-                        fx = 0.85m;
-                        targetSymbol = "GBP";
-                        Log("AUTO FX FAILED → fallback GBP 0.85");
-                    }
-                    break;
-
-                case CurrencyMode.GBP:
-                    fx = GetFxRatesAsync(http).Result["GBP"];
-                    targetSymbol = "GBP";
-                    Log("Forced GBP mode");
-                    break;
-
-                case CurrencyMode.USD:
-                    fx = GetFxRatesAsync(http).Result["USD"];
-                    targetSymbol = "USD";
-                    Log("Forced USD mode");
-                    break;
-
-                case CurrencyMode.EUR:
-                default:
-                    convert = false;
-                    Log("EUR mode selected");
-                    break;
-            }
-
             string temp = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".xlsx");
             File.Copy(workbookPath, temp, true);
-            using var pkg = new ExcelPackage(new FileInfo(temp));
-            var ws = pkg.Workbook.Worksheets[0];
-            var (row, priceCol, tsCol, pidCol, gameCol) = FindHeader(ws);
-            Log($"Header found at row: {row}. Cols: Price={priceCol}, TS={tsCol}, PID={pidCol}, Game={gameCol}");
 
-            if (row == -1)
+            try
             {
-                Log("ERROR: Could not find required column headers in first 20 rows.");
-                return;
-            }
+                using var http = new HttpClient();
+                using var pkg = new ExcelPackage(new FileInfo(temp));
+                var ws = pkg.Workbook.Worksheets[0];
+                var (row, priceCol, tsCol, pidCol, gameCol) = FindHeader(ws);
 
-            int last = ws.Dimension.End.Row;
-            int updatedCount = 0;
-            var missing = new List<int>();
-
-            for (int r = row + 1; r <= last; r++)
-            {
-                var pidText = ws.Cells[r, pidCol].Text.Trim();
-                if (!int.TryParse(pidText, out int pid))
-                    continue;
-
-                if (!map.TryGetValue(pid, out var eur))
+                if (row == -1)
                 {
-                    missing.Add(pid);
-                    continue;
+                    Log("ERROR: Could not find required column headers (Card Price, Price Updated, Cardmarket ID) in first 20 rows.");
+                    return;
                 }
-                decimal value = convert ? Math.Round(eur * fx, 2) : eur;
-                ws.Cells[r, priceCol].Value = value;
-                ws.Cells[r, tsCol].Value = DateTime.Now.ToString("yyyy-MM-dd");
-                updatedCount++;
+
+                Log($"Header found at row: {row}. Cols: Price={priceCol}, TS={tsCol}, PID={pidCol}, Game={(gameCol == -1 ? "none" : gameCol.ToString())}");
+                if (gameCol == -1)
+                    Log($"No Game column found - using {_defaultGame.DisplayName()} for every row.");
+                else
+                    Log($"Game column found - blank or unrecognised cells will use {_defaultGame.DisplayName()}.");
+
+                int last = ws.Dimension.End.Row;
+
+                // Pass 1: work out which rows to update and which game each one belongs to
+                var rows = new List<(int Row, int Pid, GameType Game)>();
+                var unknownGames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                for (int r = row + 1; r <= last; r++)
+                {
+                    var pidText = ws.Cells[r, pidCol].Text.Trim();
+                    if (!int.TryParse(pidText, out int pid))
+                        continue;
+
+                    GameType game = _defaultGame;
+                    if (gameCol != -1)
+                    {
+                        var gameText = ws.Cells[r, gameCol].Text.Trim();
+                        var parsed = GameTypeExtensions.ParseGame(gameText);
+                        if (parsed.HasValue)
+                        {
+                            game = parsed.Value;
+                        }
+                        else if (gameText.Length > 0 && unknownGames.Add(gameText))
+                        {
+                            Log($"WARNING: Unrecognised game \"{gameText}\" - using {_defaultGame.DisplayName()} for those rows.");
+                        }
+                    }
+
+                    rows.Add((r, pid, game));
+                }
+
+                // Only download the price guides for games that are actually in the sheet
+                var maps = new Dictionary<GameType, Dictionary<int, decimal>>();
+                foreach (var game in rows.Select(x => x.Game).Distinct())
+                {
+                    Log($"Downloading {game.DisplayName()} price guide...");
+                    using var doc = DownloadPriceGuideAsync(http, game).Result;
+                    maps[game] = BuildPriceMap(doc);
+                }
+
+                decimal fx = 1m;
+                bool convert = true;
+                string targetSymbol = "GBP";
+
+                switch (_mode)
+                {
+                    case CurrencyMode.AUTO:
+                        try
+                        {
+                            var rates = GetFxRatesAsync(http).Result;
+                            fx = rates["GBP"];
+                            targetSymbol = "GBP";
+                            Log($"AUTO FX: 1 EUR = {fx} GBP");
+                        }
+                        catch
+                        {
+                            fx = 0.85m;
+                            targetSymbol = "GBP";
+                            Log("AUTO FX FAILED → fallback GBP 0.85");
+                        }
+                        break;
+
+                    case CurrencyMode.GBP:
+                        fx = GetFxRatesAsync(http).Result["GBP"];
+                        targetSymbol = "GBP";
+                        Log("Forced GBP mode");
+                        break;
+
+                    case CurrencyMode.USD:
+                        fx = GetFxRatesAsync(http).Result["USD"];
+                        targetSymbol = "USD";
+                        Log("Forced USD mode");
+                        break;
+
+                    case CurrencyMode.EUR:
+                    default:
+                        convert = false;
+                        Log("EUR mode selected");
+                        break;
+                }
+
+                // Pass 2: write the prices
+                int updatedCount = 0;
+                var missing = new List<string>();
+
+                foreach (var (r, pid, game) in rows)
+                {
+                    if (!maps[game].TryGetValue(pid, out var eur))
+                    {
+                        missing.Add($"{pid} ({game.DisplayName()})");
+                        continue;
+                    }
+                    decimal value = convert ? Math.Round(eur * fx, 2) : eur;
+                    ws.Cells[r, priceCol].Value = value;
+                    ws.Cells[r, tsCol].Value = DateTime.Now.ToString("yyyy-MM-dd");
+                    updatedCount++;
+                }
+
+                pkg.Save();
+                File.Copy(temp, workbookPath, true);
+
+                if (missing.Count > 0)
+                {
+                    Log($"{missing.Count} PID(s) not found in price guide: {string.Join(", ", missing.Distinct())}");
+                }
+                Log($"DONE. Updated {updatedCount} rows in {targetSymbol}{(convert ? "" : " (EUR, no conversion)")}.");
             }
-
-            pkg.Save();
-            File.Copy(temp, workbookPath, true);
-            File.Delete(temp);
-
-            if (missing.Count > 0)
+            finally
             {
-                Log($"{missing.Count} PID(s) not found in price guide: {string.Join(", ", missing.Distinct())}");
+                try { File.Delete(temp); } catch { }
             }
-            Log($"DONE. Updated {updatedCount} rows in {targetSymbol}{(convert ? "" : " (EUR, no conversion)")}.");
         }
 
         private void CreateRotatingBackup(string workbookPath)
@@ -202,20 +247,16 @@ namespace CardPriceUpdaterGui
             }
         }
 
-        private async Task<JsonDocument[]> DownloadPriceGuidesAsync(HttpClient http, string[] urls)
+        private async Task<JsonDocument> DownloadPriceGuideAsync(HttpClient http, GameType game)
         {
-            var list = new List<JsonDocument>();
-            foreach (var url in urls)
-            {
-                var json = await RetryPolicy.RunAsync(
-                    () => http.GetStringAsync(url),
-                    _maxRetries, _retryDelaySeconds, _log, $"GET {Path.GetFileName(url)}");
-                list.Add(JsonDocument.Parse(json));
-            }
-            return list.ToArray();
+            string url = PRICE_GUIDE_URLS[game];
+            var json = await RetryPolicy.RunAsync(
+                () => http.GetStringAsync(url),
+                _maxRetries, _retryDelaySeconds, _log, $"GET {Path.GetFileName(url)}");
+            return JsonDocument.Parse(json);
         }
 
-        private Dictionary<int, decimal> BuildPriceMap(JsonDocument[] docs)
+        private Dictionary<int, decimal> BuildPriceMap(JsonDocument doc)
         {
             var map = new Dictionary<int, decimal>();
 
@@ -230,32 +271,29 @@ namespace CardPriceUpdaterGui
 
             Log($"Using price field: {fieldName}");
 
-            foreach (var doc in docs)
+            if (!doc.RootElement.TryGetProperty("priceGuides", out var guides))
+                return map;
+
+            foreach (var e in guides.EnumerateArray())
             {
-                if (!doc.RootElement.TryGetProperty("priceGuides", out var guides))
+                if (!e.TryGetProperty("idProduct", out var idEl))
                     continue;
 
-                foreach (var e in guides.EnumerateArray())
-                {
-                    if (!e.TryGetProperty("idProduct", out var idEl))
-                        continue;
+                // This will now successfully match "avg7", "avg30", etc.
+                if (!e.TryGetProperty(fieldName, out var priceEl))
+                    continue;
 
-                    // This will now successfully match "avg7", "avg30", etc.
-                    if (!e.TryGetProperty(fieldName, out var priceEl))
-                        continue;
+                if (!int.TryParse(idEl.ToString(), out int id))
+                    continue;
 
-                    if (!int.TryParse(idEl.ToString(), out int id))
-                        continue;
+                if (!decimal.TryParse(
+                        priceEl.ToString(),
+                        NumberStyles.Any,
+                        CultureInfo.InvariantCulture,
+                        out var price))
+                    continue;
 
-                    if (!decimal.TryParse(
-                            priceEl.ToString(),
-                            NumberStyles.Any,
-                            CultureInfo.InvariantCulture,
-                            out var price))
-                        continue;
-
-                    map[id] = price;
-                }
+                map[id] = price;
             }
 
             return map;
@@ -291,7 +329,7 @@ namespace CardPriceUpdaterGui
                     if (h.Contains("cardmarket id")) pid = c;
                     if (h.Contains("game")) game = c;
                 }
-                if (price != -1 && ts != -1 && pid != -1 && game != -1)
+                if (price != -1 && ts != -1 && pid != -1)
                     return (r, price, ts, pid, game);
             }
             return (-1, -1, -1, -1, -1);

@@ -23,6 +23,11 @@ namespace Cardmarket_Price_Updater
             public override string ToString() => Text;
         }
 
+        private sealed record GameItem(GameType Value, string Text)
+        {
+            public override string ToString() => Text;
+        }
+
         private AppConfig _config = AppConfig.Load();
         private string? _updateDownloadUrl;
         private bool _suppressCurrencyEvents;
@@ -40,6 +45,16 @@ namespace Cardmarket_Price_Updater
             };
             PriceTypeCombo.ItemsSource = items;
             PriceTypeCombo.SelectedItem = items.FirstOrDefault(i => i.Value == _config.PriceType) ?? items[2];
+
+            // ---------------- DEFAULT GAME DROPDOWN ----------------
+            var games = new List<GameItem>
+            {
+                new(GameType.YuGiOh, GameType.YuGiOh.DisplayName()),
+                new(GameType.MTG, GameType.MTG.DisplayName()),
+                new(GameType.Pokemon, GameType.Pokemon.DisplayName()),
+            };
+            GameCombo.ItemsSource = games;
+            GameCombo.SelectedItem = games.FirstOrDefault(g => g.Value == _config.DefaultGame) ?? games[0];
 
             SetCurrencyChecked(_config.CurrencyMode);
             CurrencyGbp.IsCheckedChanged += (_, __) => OnCurrencyToggled(CurrencyGbp, CurrencyMode.GBP);
@@ -141,9 +156,11 @@ namespace Cardmarket_Price_Updater
                 OutputBox.Text = string.Empty;
                 var selectedPriceType = ((PriceTypeItem)PriceTypeCombo.SelectedItem!).Value;
                 var selectedCurrency = SelectedCurrency;
+                var selectedGame = ((GameItem)GameCombo.SelectedItem!).Value;
 
                 _config.CurrencyMode = selectedCurrency;
                 _config.PriceType = selectedPriceType;
+                _config.DefaultGame = selectedGame;
                 _config.Save();
 
                 foreach (var file in files)
@@ -153,7 +170,7 @@ namespace Cardmarket_Price_Updater
 
                     await Task.Run(() =>
                     {
-                        new PriceUpdater(AppendLog, _config, selectedCurrency, selectedPriceType).Run(path);
+                        new PriceUpdater(AppendLog, _config, selectedCurrency, selectedPriceType, selectedGame).Run(path);
                     });
                 }
 
