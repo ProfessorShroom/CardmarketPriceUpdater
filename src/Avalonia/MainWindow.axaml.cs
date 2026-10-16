@@ -143,7 +143,9 @@ namespace Cardmarket_Price_Updater
                 AllowMultiple = true,
                 FileTypeFilter = new[]
                 {
-                    new FilePickerFileType("Excel (*.xlsx)") { Patterns = new[] { "*.xlsx" } }
+                    new FilePickerFileType("Spreadsheets (*.xlsx, *.ods)") { Patterns = new[] { "*.xlsx", "*.ods" } },
+                    new FilePickerFileType("Excel (*.xlsx)") { Patterns = new[] { "*.xlsx" } },
+                    new FilePickerFileType("LibreOffice / OpenOffice (*.ods)") { Patterns = new[] { "*.ods" } }
                 }
             });
 

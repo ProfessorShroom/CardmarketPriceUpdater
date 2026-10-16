@@ -155,7 +155,15 @@ namespace Cardmarket_Price_Updater
             List<string> files = new();
             if (!string.IsNullOrWhiteSpace(file)) files.Add(file);
             else if (!string.IsNullOrWhiteSpace(dir))
-                files = Directory.GetFiles(dir, "*.xlsx", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly).ToList();
+                files = Directory.EnumerateFiles(dir, "*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
+                    .Where(f =>
+                    {
+                        var name = Path.GetFileName(f);
+                        return !name.StartsWith("~$") // Excel's temporary lock files
+                            && (name.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase)
+                             || name.EndsWith(".ods", StringComparison.OrdinalIgnoreCase));
+                    })
+                    .ToList();
             else { Log("No input provided (/f or /d)"); return; }
 
             int total = files.Count;

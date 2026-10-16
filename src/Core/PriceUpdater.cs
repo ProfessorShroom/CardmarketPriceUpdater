@@ -76,14 +76,16 @@ namespace CardPriceUpdaterGui
 
             CreateRotatingBackup(workbookPath);
 
-            string temp = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".xlsx");
+            bool isOds = IsOds(workbookPath);
+            string temp = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + (isOds ? ".ods" : ".xlsx"));
             File.Copy(workbookPath, temp, true);
 
             try
             {
                 using var http = new HttpClient();
-                using var pkg = new ExcelPackage(new FileInfo(temp));
-                var ws = pkg.Workbook.Worksheets[0];
+                using var pkg = isOds ? null : new ExcelPackage(new FileInfo(temp));
+                var ods = isOds ? OdsWorkbook.Load(temp) : null;
+                ISheet ws = isOds ? ods!.FirstSheet : new EpplusSheet(pkg!.Workbook.Worksheets[0]);
                 var (row, priceCol, tsCol, pidCol, gameCol) = FindHeader(ws);
 
                 if (row == -1)
@@ -98,7 +100,7 @@ namespace CardPriceUpdaterGui
                 else
                     Log($"Game column found - blank or unrecognised cells will use {_defaultGame.DisplayName()}.");
 
-                int last = ws.Dimension.End.Row;
+                int last = ws.LastRow;
 
                 // Pass 1: work out which rows to update and which game each one belongs to
                 var rows = new List<(int Row, int Pid, GameType Game)>();
@@ -106,14 +108,14 @@ namespace CardPriceUpdaterGui
 
                 for (int r = row + 1; r <= last; r++)
                 {
-                    var pidText = ws.Cells[r, pidCol].Text.Trim();
+                    var pidText = ws.GetText(r, pidCol).Trim();
                     if (!int.TryParse(pidText, out int pid))
                         continue;
 
                     GameType game = _defaultGame;
                     if (gameCol != -1)
                     {
-                        var gameText = ws.Cells[r, gameCol].Text.Trim();
+                        var gameText = ws.GetText(r, gameCol).Trim();
                         var parsed = GameTypeExtensions.ParseGame(gameText);
                         if (parsed.HasValue)
                         {
@@ -190,12 +192,13 @@ namespace CardPriceUpdaterGui
                         continue;
                     }
                     decimal value = convert ? Math.Round(eur * fx, 2) : eur;
-                    ws.Cells[r, priceCol].Value = value;
-                    ws.Cells[r, tsCol].Value = DateTime.Now.ToString("yyyy-MM-dd");
+                    ws.SetNumber(r, priceCol, value);
+                    ws.SetText(r, tsCol, DateTime.Now.ToString("yyyy-MM-dd"));
                     updatedCount++;
                 }
 
-                pkg.Save();
+                if (ods != null) ods.Save(temp);
+                else pkg!.Save();
                 File.Copy(temp, workbookPath, true);
 
                 if (missing.Count > 0)
@@ -209,6 +212,9 @@ namespace CardPriceUpdaterGui
                 try { File.Delete(temp); } catch { }
             }
         }
+
+        private static bool IsOds(string path) =>
+            string.Equals(Path.GetExtension(path), ".ods", StringComparison.OrdinalIgnoreCase);
 
         private void CreateRotatingBackup(string workbookPath)
         {
@@ -314,16 +320,16 @@ namespace CardPriceUpdaterGui
             }, _maxRetries, _retryDelaySeconds, _log, "FX rate lookup");
         }
 
-        private (int headerRow, int priceCol, int tsCol, int pidCol, int gameCol) FindHeader(ExcelWorksheet ws)
+        private (int headerRow, int priceCol, int tsCol, int pidCol, int gameCol) FindHeader(ISheet ws)
         {
-            int maxRow = Math.Min(20, ws.Dimension.End.Row);
-            int maxCol = ws.Dimension.End.Column;
+            int maxRow = Math.Min(20, ws.LastRow);
+            int maxCol = ws.LastCol;
             for (int r = 1; r <= maxRow; r++)
             {
                 int price = -1, ts = -1, pid = -1, game = -1;
                 for (int c = 1; c <= maxCol; c++)
                 {
-                    var h = ws.Cells[r, c].Text.ToLower();
+                    var h = ws.GetText(r, c).ToLower();
                     if (h.Contains("card price")) price = c;
                     if (h.Contains("price updated")) ts = c;
                     if (h.Contains("cardmarket id")) pid = c;
