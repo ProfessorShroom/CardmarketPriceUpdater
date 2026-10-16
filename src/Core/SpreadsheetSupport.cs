@@ -9,6 +9,9 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
+// EPPlus also defines a CompressionLevel type, so say which one we mean
+using CompressionLevel = System.IO.Compression.CompressionLevel;
+
 // Copyright © Charlie Howard 2026 All rights reserved.
 
 namespace Cardmarket_Price_Updater.Core
