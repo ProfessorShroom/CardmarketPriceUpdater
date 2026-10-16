@@ -49,22 +49,22 @@ curl -sL https://github.com/ProfessorShroom/CardmarketPriceUpdater/releases/late
 Then run from anywhere - see [CLI Usage](#cli-usage) below for the available flags:
 
 ```bash
-CardmarketPriceUpdater /f ./Template.xlsx
+CardmarketPriceUpdater /f ./Template.ods
 ```
 
 ### Project layout
 
 ```
-src/Core/       - shared logic: price lookup, FX conversion, retry/backoff, config, backups
-src/Avalonia/   - the app itself (GUI + CLI entry point), one codebase for Windows and Linux
+src/Core/       - Shared logic: price lookup, FX conversion, retry/backoff, config, backups
+src/Avalonia/   - The app itself (GUI + CLI entry point), one codebase for Windows and Linux
 packaging/      - Flatpak manifest for Linux
-update.xml      - version-check file for the Windows auto-updater
-Template.xlsx   - starter spreadsheet
+update.xml      - Version-check file for the Windows auto-updater
+Template.old    - Template spreadsheet
 ```
 
 ### Usage
 
-Use the included Template.xlsx (or save it as a `.ods` file from LibreOffice/OpenOffice - both `.xlsx` and `.ods` are supported). The only 3 columns that are required are Card Price, Price Updated, and Cardmarket ID (Game is optional, see below). The other columns are just there for you.
+Use the included Template.ods (both `.xlsx` and `.ods` are supported). The only 3 columns that are required are Card Price, Price Updated, and Cardmarket ID (Game is optional, see below). The other columns are just there for you.
 
 The template has 4 prefilled rows to show you how to fill it out.
 
@@ -122,23 +122,25 @@ It's created automatically on first run with these defaults - delete it to reset
 
 Run the executable from a terminal using these commands for headless use (same on Windows and Linux):
 
-- /f to specify a filename, for example: `./Cardmarket-Price-Updater /f ./Template.xlsx`
+- /f to specify a filename, for example: `./Cardmarket-Price-Updater /f ./Template.ods`
 - /d to specify a directory, this will run through every .xlsx and .ods in that directory, for example: `./Cardmarket-Price-Updater /d ./`
 - /r combined with /d, also searches subdirectories
-- /c to specify a currency, by default it's set to auto which will use GBP, for example: `./Cardmarket-Price-Updater /c e /f ./Template.xlsx` (`/c e` is EUR €, `/c p` is GBP £, `/c u` is USD $)
-- /g to specify the game used when the spreadsheet has no Game column (or a blank Game cell), for example: `./Cardmarket-Price-Updater /g p /f ./Template.xlsx` (`/g y` is Yu-Gi-Oh!, `/g m` is Magic: The Gathering, `/g p` is Pokémon; defaults to Yu-Gi-Oh!)
-- /log to log output to a file, for example: `./Cardmarket-Price-Updater /f ./Template.xlsx /log ./log.txt`
-- /q, /quiet, /s, /silent all allow you to run silently with no console output at all, for example `./Cardmarket-Price-Updater /f ./Template.xlsx /s`
+- /c to specify a currency, by default it's set to auto which will use GBP, for example: `./Cardmarket-Price-Updater /c e /f ./Template.ods` (`/c e` is EUR €, `/c p` is GBP £, `/c u` is USD $)
+- /g to specify the game used when the spreadsheet has no Game column (or a blank Game cell), for example: `./Cardmarket-Price-Updater /g p /f ./Template.ods` (`/g y` is Yu-Gi-Oh!, `/g m` is Magic: The Gathering, `/g p` is Pokémon; defaults to Yu-Gi-Oh!)
+- /log to log output to a file, for example: `./Cardmarket-Price-Updater /f ./Template.ods /log ./log.txt`
+- /q, /quiet, /s, /silent all allow you to run silently with no console output at all, for example `./Cardmarket-Price-Updater /f ./Template.ods /s`
 
 ### Example Spreadsheet
 
-| Release Date | Game      | Set Name                           | Card Name              | Set Code   | Card Price (£) | Price Updated | Cardmarket ID | Rarity                | Own? | Edition | Bought For (£) | Collection Value (£)              | Remaning Cards | Total Cards |
-| ------------ | --------- | ---------------------------------- | ---------------------- | ---------- | -------------- | ------------- | ------------- | --------------------- | ---- | ------- | -------------- | --------------------------------- | -------------- | ----------- |
-| 12/09/2025   | Yu-Gi-Oh! | Nike Collaboration Cards (special) | Red-Eyes Black Dragon  | NKC1-EN002 | £402.53        | 2026-08-26    | 845882        | Prismatic Secret Rare | ✔    | LIMITED | £200.00        | £28,799.95                        | 1              | 4           |
-| 08/03/2002   | Yu-Gi-Oh! | Legend of Blue-Eyes White Dragon   | Blue-Eyes White Dragon | LOB-001    | £467.11        | 2026-08-26    | 577919        | Ultra Rare            | ✖    | ✖       |                | Amount Spent (£)                  |                |             |
-| 05/08/1993   | MTG       | Alpha                              | Black Lotus            |            | £9,876.27      | 2026-08-26    | 5465          | Rare                  | ✔    | ✔       | £20,000.00     | £22,250.00                        |                |             |
-| 09/01/1999   | Pokémon   | Base Set                           | Charizard              | BS 4       | £2,119.74      | 2026-08-26    | 660224        | Holo Rare             | ✔    | PSA9    | £2,000.00      | Amount to Complete Collection (£) |                |             |
-| 18/11/2008   | Yu-Gi-Oh! | Crossroads of Chaos                | Black Rose Dragon      | CSOC-EN039 | £245.40        | 2026-08-26    | 108490        | Ghost Rare            | ✔    | PSA10   | £50.00         | £116.06                           |                |             |
+| **Set Name**                           | **Card Name**              | **Set Code**   | **Card Price (£)** | **Price Updated** | **Cardmarket ID** | **Rarity**                | **Own?** | **Edition** | **Bought For (£)** | **Collection Value (£)**              | **Remaining Cards**    |
+| -------------------------------------- | -------------------------- | -------------- | ------------------ | ----------------- | ----------------- | ------------------------- | -------- | ----------- | ------------------ | ------------------------------------- | ---------------------- |
+| **Nike Collaboration Cards (special)** | **Red-Eyes Black Dragon**  | **NKC1-EN002** | **£397.81**        | **2026-10-16**    | **845882**        | **Prismatic Secret Rare** | **✔**    | **LIMITED** | **£200.00**        | **£12,643.94**                        | **1**                  |
+| **Legend of Blue-Eyes White Dragon**   | **Blue-Eyes White Dragon** | **LOB-001**    | **£373.95**        | **2026-10-16**    | **577919**        | **Ultra Rare**            | **✖**    | **✖**       | **<br>**           | **Amount Spent (£)**                  | **Upgrades Remaining** |
+| **Alpha**                              | **Black Lotus**            | **<br>**       | **£9,760.57**      | **2026-10-16**    | **5465**          | **Rare**                  | **✔**    | **✔**       | **£20,000.00**     | **£22,250.00**                        | **0**                  |
+| **Base Set**                           | **Charizard**              | **BS 4**       | **£2,097.33**      | **2026-10-16**    | **660224**        | **Holo Rare**             | **✔**    | **PSA9**    | **£2,000.00**      | **Amount to Complete Collection (£)** | **Total Cards**        |
+| **Crossroads of Chaos**                | **Black Rose Dragon**      | **CSOC-EN039** | **£268.41**        | **2026-10-16**    | **108490**        | **Ghost Rare**            | **✔**    | **PSA10**   | **£50.00**         | **£467.11**                           | **4**                  |
+| **<br>**                               | **<br>**                   | **<br>**       | **<br>**           | **<br>**          | **<br>**          | **<br>**                  | **<br>** | **<br>**    | **<br>**           |                                       | **% of Cards Owned**   |
+| **<br>**                               | **<br>**                   | **<br>**       | **<br>**           | **<br>**          | **<br>**          | **<br>**                  | **<br>** | **<br>**    | **<br>**           |                                       | **75.00%**             |
 
 #### Changelog
 
