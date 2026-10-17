@@ -35,7 +35,7 @@ The prices are based on an average of everything, so 1st Edition and Unlimited, 
 To install or update to the latest release, run this command in your terminal:
 
 ```bash
-curl -sL https://github.com/ProfessorShroom/CardmarketPriceUpdater/releases/latest/download/CardmarketPriceUpdater.flatpak -o CardmarketPriceUpdater.flatpak && flatpak install --user --assumeyes ./CardmarketPriceUpdater.flatpak && rm $HOME/CardmarketPriceUpdater.flatpak
+curl -sL https://github.com/ProfessorShroom/CardmarketPriceUpdater/releases/latest/download/CardmarketPriceUpdater.flatpak -o $HOME/CardmarketPriceUpdater.flatpak && flatpak install --user --assumeyes --or-update $HOME/CardmarketPriceUpdater.flatpak ; rm $HOME/CardmarketPriceUpdater.flatpak
 ```
 
 ### Installation (Linux CLI / headless)
