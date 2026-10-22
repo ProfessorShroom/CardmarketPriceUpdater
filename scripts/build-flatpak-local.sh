@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 echo "Publishing linux-x64..."
 rm -rf packaging/flatpak/publish-linux-x64

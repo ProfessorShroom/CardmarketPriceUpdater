@@ -32,18 +32,34 @@ The prices are based on an average of everything, so 1st Edition and Unlimited, 
 
 ### Installation & Updating (Linux via Flatpak)
 
-To install or update to the latest release, run this command in your terminal:
+To install or update to the latest release, run the included `updateCardmarketPriceUpdaterFlatpak.sh` script. It checks the latest release, and only downloads and installs it if you're not already up to date:
 
 ```bash
-curl -sL https://github.com/ProfessorShroom/CardmarketPriceUpdater/releases/latest/download/CardmarketPriceUpdater.flatpak -o $HOME/CardmarketPriceUpdater.flatpak && flatpak install --user --assumeyes --or-update $HOME/CardmarketPriceUpdater.flatpak ; rm $HOME/CardmarketPriceUpdater.flatpak
+curl -sL https://raw.githubusercontent.com/ProfessorShroom/CardmarketPriceUpdater/main/scripts/updateCardmarketPriceUpdaterFlatpak.sh | bash
 ```
 
-### Installation (Linux CLI / headless)
-
-For headless servers, or anywhere you just want the CLI with no Flatpak, GUI runtime, or display required, grab the self-contained Linux binary and install it directly to your system's PATH:
+Or, if you'd rather download the script and run it yourself:
 
 ```bash
-curl -sL https://github.com/ProfessorShroom/CardmarketPriceUpdater/releases/latest/download/CardmarketPriceUpdater-linux-x64.tar.gz -o /tmp/CardmarketPriceUpdater.tar.gz && mkdir -p ~/.local/bin ~/.local/share/CardmarketPriceUpdater && tar -xzf /tmp/CardmarketPriceUpdater.tar.gz -C ~/.local/share/CardmarketPriceUpdater && mv ~/.local/share/CardmarketPriceUpdater/Cardmarket-Price-Updater ~/.local/bin/CardmarketPriceUpdater && chmod +x ~/.local/bin/CardmarketPriceUpdater && rm /tmp/CardmarketPriceUpdater.tar.gz
+chmod +x scripts/updateCardmarketPriceUpdaterFlatpak.sh
+./scripts/updateCardmarketPriceUpdaterFlatpak.sh
+```
+
+Once installed, launch it with `flatpak run io.github.professorshroom.CardmarketPriceUpdater` or from your app menu.
+
+### Installation & Updating (Linux CLI / headless)
+
+For headless servers, or anywhere you just want the CLI with no Flatpak, GUI runtime, or display required, use the included `updateCardmarketPriceUpdater.sh` script. It installs the self-contained Linux binary to `~/.local/bin` (make sure that's on your PATH), and re-running it later updates to the latest release only if a newer one is available:
+
+```bash
+curl -sL https://raw.githubusercontent.com/ProfessorShroom/CardmarketPriceUpdater/main/scripts/updateCardmarketPriceUpdater.sh | bash
+```
+
+Or, if you'd rather download the script and run it yourself:
+
+```bash
+chmod +x scripts/updateCardmarketPriceUpdater.sh
+./scripts/updateCardmarketPriceUpdater.sh
 ```
 
 Then run from anywhere - see [CLI Usage](#cli-usage) below for the available flags:
@@ -58,6 +74,7 @@ CardmarketPriceUpdater /f ./Template.ods
 src/Core/       - Shared logic: price lookup, FX conversion, retry/backoff, config, backups
 src/Avalonia/   - The app itself (GUI + CLI entry point), one codebase for Windows and Linux
 packaging/      - Flatpak manifest for Linux
+scripts/        - Install/update scripts for Linux (CLI binary and Flatpak)
 update.xml      - Version-check file for the Windows auto-updater
 Template.old    - Template spreadsheet
 ```
