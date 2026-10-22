@@ -68,17 +68,6 @@ Then run from anywhere - see [CLI Usage](#cli-usage) below for the available fla
 CardmarketPriceUpdater /f ./Template.ods
 ```
 
-### Project layout
-
-```
-src/Core/       - Shared logic: price lookup, FX conversion, retry/backoff, config, backups
-src/Avalonia/   - The app itself (GUI + CLI entry point), one codebase for Windows and Linux
-packaging/      - Flatpak manifest for Linux
-scripts/        - Install/update scripts for Linux (CLI binary and Flatpak)
-update.xml      - Version-check file for the Windows auto-updater
-Template.old    - Template spreadsheet
-```
-
 ### Usage
 
 Use the included Template.ods (both `.xlsx` and `.ods` are supported). The only 3 columns that are required are Card Price, Price Updated, and Cardmarket ID (Game is optional, see below). The other columns are just there for you.
@@ -163,8 +152,9 @@ Run the executable from a terminal using these commands for headless use (same o
 
 #### Latest Update
 
-**Version 2.2.0.0**
+**Version 2.2.0.1 / 2.2.0.1**
 
+- **_2.2.0.1_** Corrected some comments and dates.
 - **_2.2.0.0_** Added support for LibreOffice / OpenOffice spreadsheets (`.ods`) alongside `.xlsx`. Prices and the Price Updated date are written straight into the `.ods` file, and the rest of the file (styles, column widths, currency formatting, other sheets) is left untouched. No LibreOffice install is needed.
 - **_2.2.0.0_** The GUI file picker now offers `.xlsx` and `.ods` (with an "all spreadsheets" filter), and the CLI `/d` flag now picks up `.ods` files as well as `.xlsx` ones.
 - **_2.2.0.0_** CLI `/d` now matches `.xlsx`/`.ods` case-insensitively on Linux and skips Excel's temporary `~$` lock files.

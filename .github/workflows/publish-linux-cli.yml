@@ -1,17 +1,5 @@
 name: Publish Linux CLI build
 
-# Runs on the same tag push as your Flatpak workflow (v*.*.*.*), so pushing
-# one tag (e.g. v2.0.3.0) drives the exe, the .flatpak, and this linux-x64
-# CLI tarball onto the same release.
-#
-# Publishes a self-contained linux-x64 build as a plain tarball, separate
-# from the .flatpak bundle, so headless/server users can grab a binary
-# directly without needing flatpak or any runtime installed at all.
-#
-# This is safe to run standalone: the CLI path in Program.cs (RunCli)
-# never touches Avalonia/BuildAvaloniaApp, so this build works with no
-# X11/Wayland and no GUI libraries present on the target machine.
-
 on:
   push:
     tags:
@@ -25,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5

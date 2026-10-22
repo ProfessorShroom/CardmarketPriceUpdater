@@ -8,34 +8,21 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-
-// EPPlus also defines a CompressionLevel type, so say which one we mean
 using CompressionLevel = System.IO.Compression.CompressionLevel;
 
-// Copyright © Charlie Howard 2026 All rights reserved.
+// Copyright © Charlie Howard 2025-2026 All rights reserved
 
 namespace Cardmarket_Price_Updater.Core
 {
-    /// <summary>
-    /// The handful of operations PriceUpdater needs from a worksheet.
-    /// Rows and columns are 1-based, like EPPlus.
-    /// </summary>
     internal interface ISheet
     {
-        /// <summary>Last row that contains anything (0 if the sheet is empty).</summary>
         int LastRow { get; }
-
-        /// <summary>Right-most column that contains anything (0 if the sheet is empty).</summary>
         int LastCol { get; }
-
-        /// <summary>The cell's displayed text, or "" if the cell is empty.</summary>
         string GetText(int row, int col);
-
         void SetNumber(int row, int col, decimal value);
         void SetText(int row, int col, string value);
     }
 
-    /// <summary>.xlsx worksheet (EPPlus).</summary>
     internal sealed class EpplusSheet : ISheet
     {
         private readonly ExcelWorksheet _ws;
@@ -50,14 +37,6 @@ namespace Cardmarket_Price_Updater.Core
         public void SetText(int row, int col, string value) => _ws.Cells[row, col].Value = value;
     }
 
-    /// <summary>
-    /// An OpenDocument spreadsheet (.ods, as written by LibreOffice / OpenOffice).
-    ///
-    /// Only content.xml is touched, and only the cells we write to are modified, so styles,
-    /// column widths, other sheets, etc. all survive. Every other entry in the zip is copied
-    /// across untouched (mimetype stays first and uncompressed, as the spec requires).
-    /// Only the first sheet is exposed, matching how the .xlsx path behaves.
-    /// </summary>
     internal sealed class OdsWorkbook
     {
         private static readonly XNamespace Office = "urn:oasis:names:tc:opendocument:xmlns:office:1.0";
@@ -96,7 +75,6 @@ namespace Cardmarket_Price_Updater.Core
             try
             {
                 using var s = entry.Open();
-                // PreserveWhitespace so we never alter text inside <text:p> elements
                 var doc = XDocument.Load(s, LoadOptions.PreserveWhitespace);
                 return new OdsWorkbook(bytes, doc);
             }
@@ -117,11 +95,10 @@ namespace Cardmarket_Price_Updater.Core
             {
                 if (e.FullName.EndsWith("/"))
                 {
-                    dst.CreateEntry(e.FullName); // empty directory entry
+                    dst.CreateEntry(e.FullName);
                     continue;
                 }
 
-                // The spec says "mimetype" must be the first entry and must not be compressed
                 var level = e.FullName == "mimetype" ? CompressionLevel.NoCompression : CompressionLevel.Optimal;
                 var ne = dst.CreateEntry(e.FullName, level);
                 ne.LastWriteTime = e.LastWriteTime;
@@ -141,8 +118,6 @@ namespace Cardmarket_Price_Updater.Core
             }
         }
 
-        // ------------------------------------------------------------------------------------
-
         internal sealed class OdsSheet : ISheet
         {
             private static readonly XName RowsRepeated = Table + "number-rows-repeated";
@@ -158,8 +133,6 @@ namespace Cardmarket_Price_Updater.Core
             private readonly record struct CellSpan(XElement El, int Start, int Count);
 
             public OdsSheet(XElement table) => _table = table;
-
-            // ---------- extent ----------
 
             public int LastRow
             {
@@ -186,7 +159,7 @@ namespace Cardmarket_Price_Updater.Core
                 }
             }
 
-            // ---------- reading ----------
+            // Read
 
             public string GetText(int row, int col)
             {
@@ -200,13 +173,11 @@ namespace Cardmarket_Price_Updater.Core
                 return string.Empty;
             }
 
-            // ---------- writing ----------
+            // Write
 
             public void SetNumber(int row, int col, decimal value)
             {
                 var cell = GetCellForWrite(row, col);
-
-                // Keep currency cells as currency (so the £/$/€ formatting survives); everything else becomes a plain float
                 string type = (string?)cell.Attribute(Office + "value-type") == "currency" ? "currency" : "float";
 
                 ClearValue(cell);
@@ -215,8 +186,6 @@ namespace Cardmarket_Price_Updater.Core
                 if (cell.Attribute(CalcExt + "value-type") != null)
                     cell.SetAttributeValue(CalcExt + "value-type", type);
 
-                // Display text (appended, so it stays after any cell comment, as the schema requires). LibreOffice regenerates
-                // this from the cell style on load; other readers use it as-is
                 cell.Add(new XElement(Text + "p", value.ToString("0.00", CultureInfo.InvariantCulture)));
             }
 
@@ -243,8 +212,6 @@ namespace Cardmarket_Price_Updater.Core
                 cell.SetAttributeValue(Table + "formula", null); // we're overwriting the value, so drop any formula
                 cell.Elements(Text + "p").Remove();
             }
-
-            // ---------- row / cell lookup ----------
 
             private void EnsureRows()
             {
@@ -329,10 +296,6 @@ namespace Cardmarket_Price_Updater.Core
             private static void SetRepeat(XElement el, XName attr, int n) =>
                 el.SetAttributeValue(attr, n > 1 ? n.ToString(CultureInfo.InvariantCulture) : null);
 
-            /// <summary>
-            /// ODS stores runs of identical rows/cells as one element with a "repeated" count.
-            /// To edit one row we first split it out of its run.
-            /// </summary>
             private XElement GetRowForWrite(int row)
             {
                 int idx = FindRowIndex(row);
@@ -369,7 +332,6 @@ namespace Cardmarket_Price_Updater.Core
                 var spans = CellSpans(rowEl);
                 int total = spans.Count == 0 ? 0 : spans[^1].Start + spans[^1].Count - 1;
 
-                // Short row: pad out to the column we need
                 if (col > total)
                 {
                     int gap = col - total - 1;
@@ -411,8 +373,6 @@ namespace Cardmarket_Price_Updater.Core
                 throw new InvalidOperationException($"Could not locate cell ({row}, {col}).");
             }
 
-            // ---------- text extraction ----------
-
             private static string CellText(XElement cell)
             {
                 var paragraphs = cell.Elements(Text + "p").ToList();
@@ -427,7 +387,6 @@ namespace Cardmarket_Price_Updater.Core
                     if (sb.Length > 0) return sb.ToString();
                 }
 
-                // Some generators omit <text:p> and only write the raw value
                 var sv = (string?)cell.Attribute(Office + "string-value");
                 if (sv != null) return sv;
 

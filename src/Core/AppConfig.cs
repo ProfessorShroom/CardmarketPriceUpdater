@@ -3,7 +3,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-// Copyright © Charlie Howard 2026 All rights reserved.
+// Copyright © Charlie Howard 2025-2026 All rights reserved
 
 namespace Cardmarket_Price_Updater.Core
 {

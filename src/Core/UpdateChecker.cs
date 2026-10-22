@@ -3,7 +3,8 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-// Copyright © Charlie Howard 2026 All rights reserved.
+// Copyright © Charlie Howard 2025-2026 All rights reserved
+
 
 namespace Cardmarket_Price_Updater.Core
 {

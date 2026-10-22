@@ -9,6 +9,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 
+// Copyright © Charlie Howard 2025-2026 All rights reserved
+
 namespace Cardmarket_Price_Updater
 {
     internal static class Program
