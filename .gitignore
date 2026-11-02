@@ -6,6 +6,7 @@ obj/
 *.csproj.user
 *.pubxml.user
 .vs/
+Backups
 
 # Flatpak build artifacts
 packaging/flatpak/.flatpak-builder/
