@@ -96,11 +96,17 @@ namespace Cardmarket_Price_Updater.Core
     {
         private const string BaseUrl = "https://product-images.s3.cardmarket.com";
 
+        private const string PromoFolder = "PROM";
+
+        private const string UserAgent =
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+
         private readonly HttpClient _http;
         private readonly Action<string>? _log;
         private readonly string _cacheDir;
         private readonly Dictionary<(GameType Game, string Prefix), string> _knownFolders = new();
         private bool _warnedNetwork;
+        private bool _warnedBlocked;
 
         public CardImageProvider(HttpClient http, Action<string>? log = null, string? cacheDir = null)
         {
@@ -139,13 +145,15 @@ namespace Cardmarket_Price_Updater.Core
             foreach (string folder in FolderCandidates(game, setCode, prefix))
             {
                 string url = $"{BaseUrl}/{category}/{folder}/{productId}/{productId}.jpg";
-                tried.Add(folder);
 
-                var bytes = await TryDownloadAsync(url);
+                var (bytes, status) = await TryDownloadAsync(url);
+                tried.Add($"{folder} [{status}]");
+
                 if (bytes == null)
                     continue;
 
-                _knownFolders[(game, prefix)] = folder;
+                if (prefix.Length > 0)
+                    _knownFolders[(game, prefix)] = folder;
                 try
                 {
                     Directory.CreateDirectory(_cacheDir);
@@ -163,16 +171,32 @@ namespace Cardmarket_Price_Updater.Core
             return null;
         }
 
-        private async Task<byte[]?> TryDownloadAsync(string url)
+        private async Task<(byte[]? Bytes, string Status)> TryDownloadAsync(string url)
         {
             try
             {
-                using var resp = await _http.GetAsync(url);
+                using var req = new HttpRequestMessage(HttpMethod.Get, url);
+                req.Headers.TryAddWithoutValidation("User-Agent", UserAgent);
+                req.Headers.TryAddWithoutValidation("Accept", "image/avif,image/webp,image/jpeg,image/*;q=0.8,*/*;q=0.5");
+                req.Headers.TryAddWithoutValidation("Referer", "https://www.cardmarket.com/");
+
+                using var resp = await _http.SendAsync(req);
+                int code = (int)resp.StatusCode;
+
                 if (!resp.IsSuccessStatusCode)
-                    return null;
+                {
+                    bool fromS3 = resp.Headers.Server.ToString().Contains("AmazonS3", StringComparison.OrdinalIgnoreCase);
+                    bool plainMiss = code == 404 || (code == 403 && fromS3);
+                    if (!plainMiss && !_warnedBlocked)
+                    {
+                        _warnedBlocked = true;
+                        _log?.Invoke($"Image server returned HTTP {code} (server: {resp.Headers.Server}) - Cardmarket may be blocking the request.");
+                    }
+                    return (null, code.ToString());
+                }
 
                 var bytes = await resp.Content.ReadAsByteArrayAsync();
-                return ImageInfo.IsImage(bytes) ? bytes : null;
+                return ImageInfo.IsImage(bytes) ? (bytes, "200") : (null, "not an image");
             }
             catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException)
             {
@@ -181,15 +205,16 @@ namespace Cardmarket_Price_Updater.Core
                     _warnedNetwork = true;
                     _log?.Invoke($"Image download problem: {ex.Message}");
                 }
-                return null;
+                return (null, "network error");
             }
         }
 
+        // "LOB-E056" -> "LOB", "BS 4" -> "BS", "NKC1-EN002" -> "NKC1"
         private static string FolderPrefix(string setCode)
         {
             setCode = setCode.Trim();
-            int dash = setCode.IndexOf('-');
-            return dash > 0 ? setCode[..dash] : setCode;
+            int end = setCode.IndexOfAny(new[] { '-', ' ', '/' });
+            return end > 0 ? setCode[..end] : setCode;
         }
 
         private IEnumerable<string> FolderCandidates(GameType game, string setCode, string prefix)
@@ -221,6 +246,9 @@ namespace Cardmarket_Price_Updater.Core
                         yield return withLang;
                 }
             }
+
+            if (seen.Add(PromoFolder))
+                yield return PromoFolder;
         }
     }
 }

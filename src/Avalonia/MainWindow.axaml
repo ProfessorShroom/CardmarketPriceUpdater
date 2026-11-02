@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Cardmarket_Price_Updater.MainWindow"
         Title="Cardmarket Price Updater"
-        Width="800" Height="500"
+        Width="980" Height="500"
         MinWidth="720" MinHeight="380"
         Background="#1E1E1E"
         Icon="/Assets/app-icon.ico">
@@ -70,23 +70,30 @@
 
   <DockPanel>
     <Border DockPanel.Dock="Top" Background="#282828" Padding="12,10">
-      <Grid ColumnDefinitions="Auto,10,Auto,Auto,Auto,10,Auto,8,Auto,10,Auto,*,Auto">
-        <Button x:Name="StartButton" Grid.Column="0" Classes="flat" Content="Get Prices (Browse Files)" />
+      <Grid ColumnDefinitions="*,Auto">
+        <!-- Wraps onto a second line instead of clipping when the window is narrow -->
+        <WrapPanel Grid.Column="0" Orientation="Horizontal">
+          <Button x:Name="StartButton" Classes="flat" Content="Get Prices (Browse Files)"
+                  Margin="0,0,10,4" VerticalAlignment="Center" />
 
-        <ToggleButton x:Name="CurrencyGbp" Grid.Column="2" Classes="currency" Content="£" IsChecked="True" />
-        <ToggleButton x:Name="CurrencyEur" Grid.Column="3" Classes="currency" Content="€" Margin="4,0,0,0" />
-        <ToggleButton x:Name="CurrencyUsd" Grid.Column="4" Classes="currency" Content="$" Margin="4,0,0,0" />
+          <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,10,4" VerticalAlignment="Center">
+            <ToggleButton x:Name="CurrencyGbp" Classes="currency" Content="£" IsChecked="True" />
+            <ToggleButton x:Name="CurrencyEur" Classes="currency" Content="€" />
+            <ToggleButton x:Name="CurrencyUsd" Classes="currency" Content="$" />
+          </StackPanel>
 
-        <ComboBox x:Name="PriceTypeCombo" Grid.Column="6" Width="170" />
+          <ComboBox x:Name="PriceTypeCombo" Width="170" Margin="0,0,8,4" VerticalAlignment="Center" />
 
-        <ComboBox x:Name="GameCombo" Grid.Column="8" Width="190"
-                  ToolTip.Tip="Game to use when the spreadsheet has no Game column (or a blank Game cell)" />
+          <ComboBox x:Name="GameCombo" Width="190" Margin="0,0,10,4" VerticalAlignment="Center"
+                    ToolTip.Tip="Game to use when the spreadsheet has no Game column (or a blank Game cell)" />
 
-        <CheckBox x:Name="ImagesCheck" Grid.Column="10" Content="Card images" Foreground="White"
-                  VerticalAlignment="Center"
-                  ToolTip.Tip="Add card thumbnails to the Image column (only used if the spreadsheet has an Image column and a Set Code column)" />
+          <CheckBox x:Name="ImagesCheck" Content="Card images" Foreground="White"
+                    Margin="0,0,10,4" VerticalAlignment="Center"
+                    ToolTip.Tip="Add card thumbnails to the Image column (only used if the spreadsheet has an Image column and a Set Code column)" />
+        </WrapPanel>
 
-        <Button x:Name="CloseButton" Grid.Column="12" Classes="flat" Content="Close" />
+        <Button x:Name="CloseButton" Grid.Column="1" Classes="flat" Content="Close"
+                VerticalAlignment="Top" Margin="10,0,0,0" />
       </Grid>
     </Border>
 

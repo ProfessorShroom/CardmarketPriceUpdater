@@ -156,9 +156,11 @@ Run the executable from a terminal using these commands for headless use (same o
 
 #### Latest Update
 
-**Version 2.3.0.0**
+**Version 2.3.0.1 / 2.3.0.0**
 
-- 
+- **_2.3.0.1_** Widened window as the
+- **_2.3.0.1_** Stopped Cardmarket from rejecting image download requests.
+- **_2.3.0.0_** Added an image field to the spreadsheet (this is optional, but a nice touch), the software can download an image of the card from Cardmarket and please at in the first column.
 
 #### Older Updates
 
