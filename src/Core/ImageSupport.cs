@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 
@@ -104,15 +106,60 @@ namespace Cardmarket_Price_Updater.Core
         private readonly HttpClient _http;
         private readonly Action<string>? _log;
         private readonly string _cacheDir;
-        private readonly Dictionary<(GameType Game, string Prefix), string> _knownFolders = new();
+        private readonly Dictionary<(GameType Game, string Prefix), List<string>> _knownFolders = new();
         private bool _warnedNetwork;
         private bool _warnedBlocked;
+        private bool _hintedAliases;
+        private readonly Dictionary<string, string[]> _aliases;
+
+        private static readonly Dictionary<string, string[]> BuiltInAliases = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["JMP"] = new[] { "JUMP" },
+            ["LC01"] = new[] { "LC25" },
+            ["711D"] = new[] { "711C" },
+        };
 
         public CardImageProvider(HttpClient http, Action<string>? log = null, string? cacheDir = null)
         {
             _http = http;
             _log = log;
             _cacheDir = cacheDir ?? Path.Combine(AppConfig.GetConfigDirectory(), "ImageCache");
+            _aliases = LoadAliases();
+        }
+
+        private static string AliasFilePath => Path.Combine(AppConfig.GetConfigDirectory(), "ImageFolders.json");
+
+        private Dictionary<string, string[]> LoadAliases()
+        {
+            var map = new Dictionary<string, string[]>(BuiltInAliases, StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                string path = AliasFilePath;
+                if (!File.Exists(path))
+                    return map;
+
+                using var doc = JsonDocument.Parse(File.ReadAllText(path),
+                    new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true });
+
+                foreach (var prop in doc.RootElement.EnumerateObject())
+                {
+                    var folders = new List<string>();
+                    if (prop.Value.ValueKind == JsonValueKind.String)
+                        folders.Add(prop.Value.GetString() ?? "");
+                    else if (prop.Value.ValueKind == JsonValueKind.Array)
+                        foreach (var e in prop.Value.EnumerateArray())
+                            if (e.ValueKind == JsonValueKind.String) folders.Add(e.GetString() ?? "");
+
+                    folders.RemoveAll(string.IsNullOrWhiteSpace);
+                    if (folders.Count > 0)
+                        map[prop.Name.Trim()] = folders.Select(f => f.Trim()).ToArray();
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.Invoke($"Could not read ImageFolders.json: {ex.Message}");
+            }
+            return map;
         }
 
         private static int CategoryId(GameType game) => game switch
@@ -153,7 +200,12 @@ namespace Cardmarket_Price_Updater.Core
                     continue;
 
                 if (prefix.Length > 0)
-                    _knownFolders[(game, prefix)] = folder;
+                {
+                    if (!_knownFolders.TryGetValue((game, prefix), out var list))
+                        _knownFolders[(game, prefix)] = list = new List<string>();
+                    if (!list.Contains(folder, StringComparer.OrdinalIgnoreCase))
+                        list.Add(folder);
+                }
                 try
                 {
                     Directory.CreateDirectory(_cacheDir);
@@ -168,6 +220,12 @@ namespace Cardmarket_Price_Updater.Core
             _log?.Invoke(tried.Count == 0
                 ? $"No image for {productId}: no Set Code to work out its image folder from."
                 : $"No image found for {productId} (tried folders: {string.Join(", ", tried)}).");
+
+            if (tried.Count > 0 && !_hintedAliases)
+            {
+                _hintedAliases = true;
+                _log?.Invoke($"Tip: if you know the real folder (from the card's image URL), map the set code to it in {AliasFilePath}, e.g. {{ \"{prefix}\": \"FOLDER\" }}");
+            }
             return null;
         }
 
@@ -225,8 +283,19 @@ namespace Cardmarket_Price_Updater.Core
 
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            if (_knownFolders.TryGetValue((game, prefix), out var known) && seen.Add(known))
-                yield return known;
+            if (_knownFolders.TryGetValue((game, prefix), out var known))
+                foreach (var k in known.ToArray())
+                    if (seen.Add(k))
+                        yield return k;
+
+            if (_aliases.TryGetValue(prefix, out var mapped))
+            {
+                foreach (var folder in mapped)
+                {
+                    if (seen.Add(folder))
+                        yield return folder;
+                }
+            }
 
             // LOB-E056 -> LOB
             if (seen.Add(prefix))
