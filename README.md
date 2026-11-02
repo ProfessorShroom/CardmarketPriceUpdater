@@ -142,15 +142,15 @@ Run the executable from a terminal using these commands for headless use (same o
 
 ### Example Spreadsheet
 
-| **Set Name**                           | **Card Name**              | **Set Code**   | **Card Price (£)** | **Price Updated** | **Cardmarket ID** | **Rarity**                | **Own?** | **Edition** | **Bought For (£)** | **Collection Value (£)**              | **Remaining Cards**    |
-| -------------------------------------- | -------------------------- | -------------- | ------------------ | ----------------- | ----------------- | ------------------------- | -------- | ----------- | ------------------ | ------------------------------------- | ---------------------- |
-| **Nike Collaboration Cards (special)** | **Red-Eyes Black Dragon**  | **NKC1-EN002** | **£397.81**        | **2026-10-16**    | **845882**        | **Prismatic Secret Rare** | **✔**    | **LIMITED** | **£200.00**        | **£12,643.94**                        | **1**                  |
-| **Legend of Blue-Eyes White Dragon**   | **Blue-Eyes White Dragon** | **LOB-001**    | **£373.95**        | **2026-10-16**    | **577919**        | **Ultra Rare**            | **✖**    | **✖**       | **<br>**           | **Amount Spent (£)**                  | **Upgrades Remaining** |
-| **Alpha**                              | **Black Lotus**            | **<br>**       | **£9,760.57**      | **2026-10-16**    | **5465**          | **Rare**                  | **✔**    | **✔**       | **£20,000.00**     | **£22,250.00**                        | **0**                  |
-| **Base Set**                           | **Charizard**              | **BS 4**       | **£2,097.33**      | **2026-10-16**    | **660224**        | **Holo Rare**             | **✔**    | **PSA9**    | **£2,000.00**      | **Amount to Complete Collection (£)** | **Total Cards**        |
-| **Crossroads of Chaos**                | **Black Rose Dragon**      | **CSOC-EN039** | **£268.41**        | **2026-10-16**    | **108490**        | **Ghost Rare**            | **✔**    | **PSA10**   | **£50.00**         | **£467.11**                           | **4**                  |
-| **<br>**                               | **<br>**                   | **<br>**       | **<br>**           | **<br>**          | **<br>**          | **<br>**                  | **<br>** | **<br>**    | **<br>**           |                                       | **% of Cards Owned**   |
-| **<br>**                               | **<br>**                   | **<br>**       | **<br>**           | **<br>**          | **<br>**          | **<br>**                  | **<br>** | **<br>**    | **<br>**           |                                       | **75.00%**             |
+| **Image** | **Release Date** | **Game**      | **Set Name**                           | **Card Name**              | **Set Code**   | **Card Price (£)** | **Price Updated** | **Cardmarket ID** | **Rarity**                | **Own?** | **Edition** | **Bought For (£)** | **Collection Value (£)**              | **Remaining Cards**    |
+| --------- | ---------------- | ------------- | -------------------------------------- | -------------------------- | -------------- | ------------------ | ----------------- | ----------------- | ------------------------- | -------- | ----------- | ------------------ | ------------------------------------- | ---------------------- |
+|           | **12/09/2025**   | **Yu-Gi-Oh!** | **Nike Collaboration Cards (special)** | **Red-Eyes Black Dragon**  | **NKC1-EN002** | **£392.03**        | **2026-11-02**    | **845882**        | **Prismatic Secret Rare** | **✔**    | **LIMITED** | **£200.00**        | **£12,367.61**                        | **2**                  |
+|           | **08/03/2002**   | **Yu-Gi-Oh!** | **Legend of Blue-Eyes White Dragon**   | **Blue-Eyes White Dragon** | **LOB-001**    | **£122.24**        | **2026-11-02**    | **102241**        | **Ultra Rare**            | **✖**    | **✖**       | **<br>**           | **Amount Spent (£)**                  | **Upgrades Remaining** |
+|           | **05/08/1993**   | **MTG**       | **Alpha**                              | **Black Lotus**            | **LEA**        | **£9,618.68**      | **2026-11-02**    | **5465**          | **Rare**                  | **✔**    | **✔**       | **£20,000.00**     | **£22,250.00**                        | **0**                  |
+|           | **09/01/1999**   | **Pokémon**   | **Base Set**                           | **Charizard**              | **BS 4**       | **£2,047.85**      | **2026-11-02**    | **660224**        | **Holo Rare**             | **✔**    | **PSA9**    | **£2,000.00**      | **Amount to Complete Collection (£)** | **Total Cards**        |
+|           | **18/11/2008**   | **Yu-Gi-Oh!** | **Crossroads of Chaos**                | **Black Rose Dragon**      | **CSOC-EN039** | **£309.05**        | **2026-11-02**    | **108490**        | **Ghost Rare**            | **✔**    | **PSA10**   | **£50.00**         | **£122.24**                           | **4**                  |
+|           | **26/01/2024**   | **Pokémon**   | **Paldean Fates**                      | **Mew ex**                 | **PAF 232**    | **£558.41**        | **2026-11-02**    | **751779**        | **SIR**                   | **✖**    | **✖**       | **<br>**           |                                       | **% of Cards Owned**   |
+|           | **<br>**         | **<br>**      | **<br>**                               | **<br>**                   | **<br>**       | **<br>**           | **<br>**          | **<br>**          | **<br>**                  | **<br>** | **<br>**    | **<br>**           |                                       | **50.00%**             |
 
 #### Changelog
 
@@ -158,7 +158,7 @@ Run the executable from a terminal using these commands for headless use (same o
 
 **Version 2.3.0.1 / 2.3.0.0**
 
-- **_2.3.0.1_** Widened window as the
+- **_2.3.0.1_** Widened window as the close button was cut off.
 - **_2.3.0.1_** Stopped Cardmarket from rejecting image download requests.
 - **_2.3.0.0_** Added an image field to the spreadsheet (this is optional, but a nice touch), the software can download an image of the card from Cardmarket and please at in the first column.
 
