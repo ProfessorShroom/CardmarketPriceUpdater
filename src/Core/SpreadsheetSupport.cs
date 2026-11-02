@@ -21,6 +21,8 @@ namespace Cardmarket_Price_Updater.Core
         string GetText(int row, int col);
         void SetNumber(int row, int col, decimal value);
         void SetText(int row, int col, string value);
+        bool HasImage(int row, int col);
+        void SetImage(int row, int col, byte[] data);
     }
 
     internal sealed class EpplusSheet : ISheet
@@ -35,6 +37,25 @@ namespace Cardmarket_Price_Updater.Core
         public string GetText(int row, int col) => _ws.Cells[row, col].Text;
         public void SetNumber(int row, int col, decimal value) => _ws.Cells[row, col].Value = value;
         public void SetText(int row, int col, string value) => _ws.Cells[row, col].Value = value;
+
+        public bool HasImage(int row, int col) =>
+            _ws.Drawings.Any(d => d.From.Row == row - 1 && d.From.Column == col - 1);
+
+        public void SetImage(int row, int col, byte[] data)
+        {
+            const double pxPerCm = 96.0 / ImageLayout.CmPerInch;
+            const double pointsPerCm = 72.0 / ImageLayout.CmPerInch;
+
+            var (wCm, hCm) = ImageInfo.FitCm(data);
+
+            _ws.Row(row).Height = ImageLayout.RowHeightCm * pointsPerCm;
+            _ws.Column(col).Width = Math.Max(_ws.Column(col).Width, (ImageLayout.ColumnWidthCm * pxPerCm - 5) / 7.0);
+
+            using var ms = new MemoryStream(data);
+            var pic = _ws.Drawings.AddPicture("cardImage" + Guid.NewGuid().ToString("N")[..8], ms);
+            pic.SetPosition(row - 1, 2, col - 1, 3);
+            pic.SetSize((int)Math.Round(wCm * pxPerCm), (int)Math.Round(hCm * pxPerCm));
+        }
     }
 
     internal sealed class OdsWorkbook
@@ -43,9 +64,22 @@ namespace Cardmarket_Price_Updater.Core
         private static readonly XNamespace Table = "urn:oasis:names:tc:opendocument:xmlns:table:1.0";
         private static readonly XNamespace Text = "urn:oasis:names:tc:opendocument:xmlns:text:1.0";
         private static readonly XNamespace CalcExt = "urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0";
+        private static readonly XNamespace Draw = "urn:oasis:names:tc:opendocument:xmlns:drawing:1.0";
+        private static readonly XNamespace Svg = "urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0";
+        private static readonly XNamespace XLink = "http://www.w3.org/1999/xlink";
+        private static readonly XNamespace StyleNs = "urn:oasis:names:tc:opendocument:xmlns:style:1.0";
+        private static readonly XNamespace Fo = "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0";
+        private static readonly XNamespace Manifest = "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0";
+
+        private const string ImgRowStyle = "cmuImgRow";
+        private const string ImgColStyle = "cmuImgCol";
+        private const string ImgGraphicStyle = "cmuImgGr";
 
         private readonly byte[] _original;
         private readonly XDocument _content;
+
+        private readonly Dictionary<string, (byte[] Data, string Mime)> _newPictures = new();
+        private bool _imageStylesReady;
 
         public OdsSheet FirstSheet { get; }
 
@@ -61,7 +95,7 @@ namespace Cardmarket_Price_Updater.Core
                 .FirstOrDefault()
                 ?? throw new InvalidDataException("This .ods file doesn't contain a spreadsheet with any sheets.");
 
-            FirstSheet = new OdsSheet(sheetEl);
+            FirstSheet = new OdsSheet(sheetEl, this);
         }
 
         public static OdsWorkbook Load(string path)
@@ -83,6 +117,56 @@ namespace Cardmarket_Price_Updater.Core
                 throw new InvalidDataException(
                     "Could not read content.xml from the .ods file - is it password protected or corrupt? " + ex.Message, ex);
             }
+        }
+
+        private void EnsureImageStyles()
+        {
+            if (_imageStylesReady) return;
+
+            var root = _content.Root!;
+            var auto = root.Element(Office + "automatic-styles");
+            if (auto == null)
+            {
+                auto = new XElement(Office + "automatic-styles");
+                var body = root.Element(Office + "body");
+                if (body != null) body.AddBeforeSelf(auto); else root.Add(auto);
+            }
+
+            string cm(double v) => v.ToString("0.###", CultureInfo.InvariantCulture) + "cm";
+
+            auto.Add(new XElement(StyleNs + "style",
+                new XAttribute(StyleNs + "name", ImgRowStyle),
+                new XAttribute(StyleNs + "family", "table-row"),
+                new XElement(StyleNs + "table-row-properties",
+                    new XAttribute(StyleNs + "row-height", cm(ImageLayout.RowHeightCm)),
+                    new XAttribute(StyleNs + "use-optimal-row-height", "false"))));
+
+            auto.Add(new XElement(StyleNs + "style",
+                new XAttribute(StyleNs + "name", ImgColStyle),
+                new XAttribute(StyleNs + "family", "table-column"),
+                new XElement(StyleNs + "table-column-properties",
+                    new XAttribute(StyleNs + "column-width", cm(ImageLayout.ColumnWidthCm)))));
+
+            auto.Add(new XElement(StyleNs + "style",
+                new XAttribute(StyleNs + "name", ImgGraphicStyle),
+                new XAttribute(StyleNs + "family", "graphic"),
+                new XElement(StyleNs + "graphic-properties",
+                    new XAttribute(StyleNs + "vertical-pos", "top"),
+                    new XAttribute(StyleNs + "vertical-rel", "paragraph"),
+                    new XAttribute(StyleNs + "horizontal-pos", "left"),
+                    new XAttribute(StyleNs + "horizontal-rel", "paragraph"),
+                    new XAttribute(StyleNs + "wrap", "none"),
+                    new XAttribute(StyleNs + "mirror", "none"),
+                    new XAttribute(Fo + "clip", "rect(0cm, 0cm, 0cm, 0cm)"))));
+
+            _imageStylesReady = true;
+        }
+
+        private string AddPicture(byte[] data)
+        {
+            string path = $"Pictures/cmu{ImageInfo.Hash(data)}.{ImageInfo.Extension(data)}";
+            _newPictures[path] = (data, ImageInfo.MimeType(data));
+            return path;
         }
 
         public void Save(string path)
@@ -110,11 +194,42 @@ namespace Cardmarket_Price_Updater.Core
                     using var xw = XmlWriter.Create(ns, settings);
                     _content.Save(xw);
                 }
+                else if (e.FullName == "META-INF/manifest.xml" && _newPictures.Count > 0)
+                {
+                    XDocument manifest;
+                    using (var ms = e.Open())
+                        manifest = XDocument.Load(ms, LoadOptions.PreserveWhitespace);
+
+                    var existing = new HashSet<string>(
+                        manifest.Root!.Elements(Manifest + "file-entry")
+                            .Select(x => (string?)x.Attribute(Manifest + "full-path") ?? string.Empty));
+
+                    foreach (var (picPath, pic) in _newPictures)
+                    {
+                        if (!existing.Add(picPath)) continue;
+                        manifest.Root.Add(new XElement(Manifest + "file-entry",
+                            new XAttribute(Manifest + "full-path", picPath),
+                            new XAttribute(Manifest + "media-type", pic.Mime)));
+                    }
+
+                    var settings = new XmlWriterSettings { Encoding = new UTF8Encoding(false), Indent = false };
+                    using var xw = XmlWriter.Create(ns, settings);
+                    manifest.Save(xw);
+                }
                 else
                 {
                     using var es = e.Open();
                     es.CopyTo(ns);
                 }
+            }
+
+            foreach (var (picPath, pic) in _newPictures)
+            {
+                if (src.GetEntry(picPath) != null) continue;
+
+                var pe = dst.CreateEntry(picPath, CompressionLevel.NoCompression);
+                using var ps = pe.Open();
+                ps.Write(pic.Data, 0, pic.Data.Length);
             }
         }
 
@@ -126,13 +241,19 @@ namespace Cardmarket_Price_Updater.Core
             private static readonly XName CoveredCellName = Table + "covered-table-cell";
 
             private readonly XElement _table;
+            private readonly OdsWorkbook _wb;
             private readonly List<RowSpan> _rows = new();
             private bool _dirty = true;
+            private readonly HashSet<int> _styledImageCols = new();
 
             private readonly record struct RowSpan(XElement El, int Start, int Count);
             private readonly record struct CellSpan(XElement El, int Start, int Count);
 
-            public OdsSheet(XElement table) => _table = table;
+            public OdsSheet(XElement table, OdsWorkbook workbook)
+            {
+                _table = table;
+                _wb = workbook;
+            }
 
             public int LastRow
             {
@@ -202,6 +323,83 @@ namespace Cardmarket_Price_Updater.Core
                 cell.Add(new XElement(Text + "p", value));
             }
 
+            public bool HasImage(int row, int col)
+            {
+                int idx = FindRowIndex(row);
+                if (idx < 0) return false;
+
+                foreach (var span in CellSpans(_rows[idx].El))
+                    if (col >= span.Start && col < span.Start + span.Count)
+                        return span.El.Elements(Draw + "frame").Any();
+
+                return false;
+            }
+
+            public void SetImage(int row, int col, byte[] data)
+            {
+                _wb.EnsureImageStyles();
+
+                if (_styledImageCols.Add(col))
+                    SetColumnStyle(col, ImgColStyle);
+
+                string href = _wb.AddPicture(data);
+                var (wCm, hCm) = ImageInfo.FitCm(data);
+
+                GetRowForWrite(row).SetAttributeValue(Table + "style-name", ImgRowStyle);
+
+                var cell = GetCellForWrite(row, col);
+                cell.Elements(Draw + "frame").Remove();
+
+                string cm(double v) => v.ToString("0.###", CultureInfo.InvariantCulture) + "cm";
+
+                var frame = new XElement(Draw + "frame",
+                    new XAttribute(Draw + "style-name", ImgGraphicStyle),
+                    new XAttribute(Draw + "layer", "layout"),
+                    new XAttribute(Svg + "width", cm(wCm)),
+                    new XAttribute(Svg + "height", cm(hCm)),
+                    new XAttribute(Svg + "x", cm((ImageLayout.ColumnWidthCm - wCm) / 2)),
+                    new XAttribute(Svg + "y", cm((ImageLayout.RowHeightCm - hCm) / 2)),
+                    new XElement(Draw + "image",
+                        new XAttribute(XLink + "href", href),
+                        new XAttribute(XLink + "type", "simple"),
+                        new XAttribute(XLink + "show", "embed"),
+                        new XAttribute(XLink + "actuate", "onLoad")));
+
+                cell.AddFirst(frame);
+            }
+
+            private void SetColumnStyle(int col, string styleName)
+            {
+                int pos = 1;
+                foreach (var el in _table.Descendants(Table + "table-column").ToList())
+                {
+                    int n = RepeatCount(el, ColsRepeated);
+                    if (col >= pos && col < pos + n)
+                    {
+                        int before = col - pos;
+                        int after = n - before - 1;
+
+                        if (before > 0)
+                        {
+                            var b = new XElement(el);
+                            SetRepeat(b, ColsRepeated, before);
+                            el.AddBeforeSelf(b);
+                        }
+                        if (after > 0)
+                        {
+                            var a = new XElement(el);
+                            SetRepeat(a, ColsRepeated, after);
+                            el.AddAfterSelf(a);
+                        }
+
+                        SetRepeat(el, ColsRepeated, 1);
+                        el.SetAttributeValue(Table + "style-name", styleName);
+                        return;
+                    }
+                    pos += n;
+                }
+            }
+
             private static void ClearValue(XElement cell)
             {
                 cell.SetAttributeValue(Office + "value", null);
@@ -209,7 +407,7 @@ namespace Cardmarket_Price_Updater.Core
                 cell.SetAttributeValue(Office + "date-value", null);
                 cell.SetAttributeValue(Office + "time-value", null);
                 cell.SetAttributeValue(Office + "boolean-value", null);
-                cell.SetAttributeValue(Table + "formula", null); // we're overwriting the value, so drop any formula
+                cell.SetAttributeValue(Table + "formula", null);
                 cell.Elements(Text + "p").Remove();
             }
 
@@ -394,7 +592,7 @@ namespace Cardmarket_Price_Updater.Core
                 if (v != null)
                 {
                     if (decimal.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) && d == Math.Truncate(d))
-                        return d.ToString("0", CultureInfo.InvariantCulture); // "12345.0" -> "12345" so ID parsing works
+                        return d.ToString("0", CultureInfo.InvariantCulture);
                     return v;
                 }
 
@@ -418,7 +616,7 @@ namespace Cardmarket_Price_Updater.Core
                         }
                         else if (child.Name == Text + "tab") sb.Append('\t');
                         else if (child.Name == Text + "line-break") sb.Append('\n');
-                        else AppendText(child, sb); // text:span, text:a, etc.
+                        else AppendText(child, sb);
                     }
                 }
             }

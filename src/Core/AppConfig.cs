@@ -18,6 +18,9 @@ namespace Cardmarket_Price_Updater.Core
         [JsonPropertyName("defaultGame")]
         public GameType DefaultGame { get; set; } = GameTypeExtensions.Default;
 
+        [JsonPropertyName("embedImages")]
+        public bool EmbedImages { get; set; } = true;
+
         [JsonPropertyName("maxRetries")]
         public int MaxRetries { get; set; } = 3;
 

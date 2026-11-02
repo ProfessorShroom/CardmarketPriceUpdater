@@ -19,6 +19,7 @@ namespace Cardmarket_Price_Updater
         private static string? logFile = null;
         private static CurrencyMode currencyMode = CurrencyMode.AUTO;
         private static GameType? gameOverride = null;
+        private static bool? embedImagesOverride = null;
 
         static void Log(string msg)
         {
@@ -94,7 +95,6 @@ namespace Cardmarket_Price_Updater
                 .UsePlatformDetect()
                 .LogToTrace();
 
-            // If we fall back to X11/XWayland, prefer GLX then EGL then software rendering
             if (OperatingSystem.IsLinux() && Environment.GetEnvironmentVariable("WAYLAND_DISPLAY") is not null)
             {
                 builder.With(new X11PlatformOptions
@@ -134,6 +134,7 @@ namespace Cardmarket_Price_Updater
                         : AppContext.BaseDirectory;
                 }
                 if (arg == "/r") recursive = true;
+                if (arg == "/noimages") embedImagesOverride = false;
                 if (arg == "/c" && i + 1 < args.Length)
                 {
                     currencyMode = args[i + 1].ToLowerInvariant() switch
@@ -152,7 +153,7 @@ namespace Cardmarket_Price_Updater
                 }
             }
 
-            var updater = new PriceUpdater(Log, config, currencyMode, null, gameOverride);
+            var updater = new PriceUpdater(Log, config, currencyMode, null, gameOverride, embedImagesOverride);
 
             List<string> files = new();
             if (!string.IsNullOrWhiteSpace(file)) files.Add(file);
@@ -161,7 +162,7 @@ namespace Cardmarket_Price_Updater
                     .Where(f =>
                     {
                         var name = Path.GetFileName(f);
-                        return !name.StartsWith("~$") // Excel's temporary lock files
+                        return !name.StartsWith("~$")
                             && (name.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase)
                              || name.EndsWith(".ods", StringComparison.OrdinalIgnoreCase));
                     })

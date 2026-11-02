@@ -82,6 +82,8 @@ Set Name isn't required, but is just so you know what set that card is from, if,
 
 Set Code is only really used for Yu-Gi-Oh! from what I can tell, as that has a code on the card, eg, LOB-001, whereas others like MTG and Pokémon do not.
 
+Image is optional. If your sheet has a column with the header `Image` (and a `Set Code` column), the program downloads a small thumbnail of each card from Cardmarket and places it in that column, making the rows taller so it fits. It works out each card's image folder from its Set Code (for example `LOB-001` uses `.../5/LOB/...` and `YAC1-JP001` uses `.../5/YAC1-JP/...`) and checks it by actually requesting the image. Images are saved in an `ImageCache` folder next to the config file so each card is only downloaded once, and rows that already have a picture are left alone. To turn it off untick the "Card images" box in the app, use the `/noimages` flag, or set `embedImages` to `false` in the config file.
+
 Card Price and Price Updated are filled out by the program, so leave them blank; they will get overwritten if you fill them out.
 
 Cardmarket ID is the important part; this is the ID from Cardmarket's site that the program will use to find the correct card. For example, if you want to get the price of [LOB-001 Blue-Eyes White Dragon](https://www.cardmarket.com/en/YuGiOh/Products/Singles/Legend-of-Blue-Eyes-White-Dragon/Blue-Eyes-White-Dragon-V1-Ultra-Rare), the ID would be 577919. The easiest way to obtain this ID is to go to the URL of the card you want, right click on the card image and press either "Open Image in New Tab" or "Copy Image Link". That link will look like this [https://product-images.s3.cardmarket.com/5/LOB/577919/577919.jpg](https://product-images.s3.cardmarket.com/5/LOB/577919/577919.jpg), that 6 digit number before .jpg is our ID.
@@ -116,6 +118,7 @@ Your last-used currency, price type and default game are remembered automaticall
   "currencyMode": "AUTO",
   "priceType": "avg30",
   "defaultGame": "YuGiOh",
+  "embedImages": true,
   "maxRetries": 3,
   "retryDelaySeconds": 2,
   "backupRetentionCount": 5
@@ -133,6 +136,7 @@ Run the executable from a terminal using these commands for headless use (same o
 - /r combined with /d, also searches subdirectories
 - /c to specify a currency, by default it's set to auto which will use GBP, for example: `./Cardmarket-Price-Updater /c e /f ./Template.ods` (`/c e` is EUR €, `/c p` is GBP £, `/c u` is USD $)
 - /g to specify the game used when the spreadsheet has no Game column (or a blank Game cell), for example: `./Cardmarket-Price-Updater /g p /f ./Template.ods` (`/g y` is Yu-Gi-Oh!, `/g m` is Magic: The Gathering, `/g p` is Pokémon; defaults to Yu-Gi-Oh!)
+- /noimages to skip adding card images, even if the sheet has an Image column
 - /log to log output to a file, for example: `./Cardmarket-Price-Updater /f ./Template.ods /log ./log.txt`
 - /q, /quiet, /s, /silent all allow you to run silently with no console output at all, for example `./Cardmarket-Price-Updater /f ./Template.ods /s`
 
@@ -152,6 +156,15 @@ Run the executable from a terminal using these commands for headless use (same o
 
 #### Latest Update
 
+**Version 2.3.0.0**
+
+- 
+
+#### Older Updates
+
+<details markdown="1">
+<summary><strong>Version 2.x - The .NET 8 / Avalonia Update</strong></summary>
+
 **Version 2.2.0.1 / 2.2.0.1**
 
 - **_2.2.0.1_** Corrected some comments and dates.
@@ -159,11 +172,6 @@ Run the executable from a terminal using these commands for headless use (same o
 - **_2.2.0.0_** The GUI file picker now offers `.xlsx` and `.ods` (with an "all spreadsheets" filter), and the CLI `/d` flag now picks up `.ods` files as well as `.xlsx` ones.
 - **_2.2.0.0_** CLI `/d` now matches `.xlsx`/`.ods` case-insensitively on Linux and skips Excel's temporary `~$` lock files.
 - **_2.2.0.0_** An empty sheet no longer crashes the program when it looks for the column headers.
-
-#### Older Updates
-
-<details markdown="1">
-<summary><strong>Version 2.x - The .NET 8 / Avalonia Update</strong></summary>
 
 **Version 2.1.0.0**
 

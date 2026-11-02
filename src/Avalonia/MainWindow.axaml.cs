@@ -56,6 +56,8 @@ namespace Cardmarket_Price_Updater
             GameCombo.ItemsSource = games;
             GameCombo.SelectedItem = games.FirstOrDefault(g => g.Value == _config.DefaultGame) ?? games[0];
 
+            ImagesCheck.IsChecked = _config.EmbedImages;
+
             SetCurrencyChecked(_config.CurrencyMode);
             CurrencyGbp.IsCheckedChanged += (_, __) => OnCurrencyToggled(CurrencyGbp, CurrencyMode.GBP);
             CurrencyEur.IsCheckedChanged += (_, __) => OnCurrencyToggled(CurrencyEur, CurrencyMode.EUR);
@@ -163,6 +165,7 @@ namespace Cardmarket_Price_Updater
                 _config.CurrencyMode = selectedCurrency;
                 _config.PriceType = selectedPriceType;
                 _config.DefaultGame = selectedGame;
+                _config.EmbedImages = ImagesCheck.IsChecked == true;
                 _config.Save();
 
                 foreach (var file in files)

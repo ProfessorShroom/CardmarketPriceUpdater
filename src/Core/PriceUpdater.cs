@@ -22,6 +22,7 @@ namespace CardPriceUpdaterGui
         private readonly double _retryDelaySeconds;
         private readonly int _backupRetentionCount;
         private readonly GameType _defaultGame;
+        private readonly bool _embedImages;
 
         public PriceUpdater(
             Action<string>? log = null,
@@ -30,7 +31,8 @@ namespace CardPriceUpdaterGui
             int maxRetries = 3,
             double retryDelaySeconds = 2,
             int backupRetentionCount = 5,
-            GameType defaultGame = GameTypeExtensions.Default)
+            GameType defaultGame = GameTypeExtensions.Default,
+            bool embedImages = true)
         {
             _log = log;
             _mode = mode;
@@ -39,9 +41,10 @@ namespace CardPriceUpdaterGui
             _retryDelaySeconds = retryDelaySeconds;
             _backupRetentionCount = backupRetentionCount;
             _defaultGame = defaultGame;
+            _embedImages = embedImages;
         }
 
-        public PriceUpdater(Action<string>? log, AppConfig config, CurrencyMode? modeOverride = null, PriceType? priceTypeOverride = null, GameType? gameOverride = null)
+        public PriceUpdater(Action<string>? log, AppConfig config, CurrencyMode? modeOverride = null, PriceType? priceTypeOverride = null, GameType? gameOverride = null, bool? embedImagesOverride = null)
             : this(
                 log,
                 modeOverride ?? config.CurrencyMode,
@@ -49,7 +52,8 @@ namespace CardPriceUpdaterGui
                 config.MaxRetries,
                 config.RetryDelaySeconds,
                 config.BackupRetentionCount,
-                gameOverride ?? config.DefaultGame)
+                gameOverride ?? config.DefaultGame,
+                embedImagesOverride ?? config.EmbedImages)
         {
         }
 
@@ -86,7 +90,7 @@ namespace CardPriceUpdaterGui
                 using var pkg = isOds ? null : new ExcelPackage(new FileInfo(temp));
                 var ods = isOds ? OdsWorkbook.Load(temp) : null;
                 ISheet ws = isOds ? ods!.FirstSheet : new EpplusSheet(pkg!.Workbook.Worksheets[0]);
-                var (row, priceCol, tsCol, pidCol, gameCol) = FindHeader(ws);
+                var (row, priceCol, tsCol, pidCol, gameCol, imgCol, setCol) = FindHeader(ws);
 
                 if (row == -1)
                 {
@@ -100,10 +104,14 @@ namespace CardPriceUpdaterGui
                 else
                     Log($"Game column found - blank or unrecognised cells will use {_defaultGame.DisplayName()}.");
 
+                if (imgCol != -1 && !_embedImages)
+                    Log("Image column found, but image embedding is turned off.");
+                else if (imgCol != -1 && setCol == -1)
+                    Log("Image column found, but there's no Set Code column to work out each card's image folder from - skipping images.");
+
                 int last = ws.LastRow;
 
-                // Pass 1: work out which rows to update and which game each one belongs to
-                var rows = new List<(int Row, int Pid, GameType Game)>();
+                var rows = new List<(int Row, int Pid, GameType Game, string SetCode)>();
                 var unknownGames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 for (int r = row + 1; r <= last; r++)
@@ -127,10 +135,10 @@ namespace CardPriceUpdaterGui
                         }
                     }
 
-                    rows.Add((r, pid, game));
+                    string setCode = setCol == -1 ? string.Empty : ws.GetText(r, setCol).Trim();
+                    rows.Add((r, pid, game, setCode));
                 }
 
-                // Only download the price guides for games that are actually in the sheet
                 var maps = new Dictionary<GameType, Dictionary<int, decimal>>();
                 foreach (var game in rows.Select(x => x.Game).Distinct())
                 {
@@ -180,11 +188,10 @@ namespace CardPriceUpdaterGui
                         break;
                 }
 
-                // Pass 2: write the prices
                 int updatedCount = 0;
                 var missing = new List<string>();
 
-                foreach (var (r, pid, game) in rows)
+                foreach (var (r, pid, game, _) in rows)
                 {
                     if (!maps[game].TryGetValue(pid, out var eur))
                     {
@@ -195,6 +202,37 @@ namespace CardPriceUpdaterGui
                     ws.SetNumber(r, priceCol, value);
                     ws.SetText(r, tsCol, DateTime.Now.ToString("yyyy-MM-dd"));
                     updatedCount++;
+                }
+
+                if (imgCol != -1 && setCol != -1 && _embedImages)
+                {
+                    var images = new CardImageProvider(http, _log);
+                    int added = 0, alreadyThere = 0;
+
+                    foreach (var (r, pid, game, setCode) in rows)
+                    {
+                        if (ws.HasImage(r, imgCol))
+                        {
+                            alreadyThere++;
+                            continue;
+                        }
+
+                        try
+                        {
+                            var data = images.GetAsync(game, pid, setCode).Result;
+                            if (data == null)
+                                continue;
+
+                            ws.SetImage(r, imgCol, data);
+                            added++;
+                        }
+                        catch (Exception ex)
+                        {
+                            Log($"Could not add image for {pid}: {ex.Message}");
+                        }
+                    }
+
+                    Log($"Images: {added} added, {alreadyThere} already in the sheet.");
                 }
 
                 if (ods != null) ods.Save(temp);
@@ -266,7 +304,6 @@ namespace CardPriceUpdaterGui
         {
             var map = new Dictionary<int, decimal>();
 
-            // Update these field names to match the actual JSON keys
             string fieldName = _priceType switch
             {
                 PriceType.trend => "trend",
@@ -285,7 +322,6 @@ namespace CardPriceUpdaterGui
                 if (!e.TryGetProperty("idProduct", out var idEl))
                     continue;
 
-                // This will now successfully match "avg7", "avg30", etc.
                 if (!e.TryGetProperty(fieldName, out var priceEl))
                     continue;
 
@@ -320,13 +356,13 @@ namespace CardPriceUpdaterGui
             }, _maxRetries, _retryDelaySeconds, _log, "FX rate lookup");
         }
 
-        private (int headerRow, int priceCol, int tsCol, int pidCol, int gameCol) FindHeader(ISheet ws)
+        private (int headerRow, int priceCol, int tsCol, int pidCol, int gameCol, int imgCol, int setCol) FindHeader(ISheet ws)
         {
             int maxRow = Math.Min(20, ws.LastRow);
             int maxCol = ws.LastCol;
             for (int r = 1; r <= maxRow; r++)
             {
-                int price = -1, ts = -1, pid = -1, game = -1;
+                int price = -1, ts = -1, pid = -1, game = -1, img = -1, set = -1;
                 for (int c = 1; c <= maxCol; c++)
                 {
                     var h = ws.GetText(r, c).ToLower();
@@ -334,11 +370,13 @@ namespace CardPriceUpdaterGui
                     if (h.Contains("price updated")) ts = c;
                     if (h.Contains("cardmarket id")) pid = c;
                     if (h.Contains("game")) game = c;
+                    if (h.Contains("image")) img = c;
+                    if (h.Contains("set code")) set = c;
                 }
                 if (price != -1 && ts != -1 && pid != -1)
-                    return (r, price, ts, pid, game);
+                    return (r, price, ts, pid, game, img, set);
             }
-            return (-1, -1, -1, -1, -1);
+            return (-1, -1, -1, -1, -1, -1, -1);
         }
     }
 }
