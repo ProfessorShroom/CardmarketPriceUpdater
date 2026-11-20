@@ -1,0 +1,74 @@
+name: Screenshot
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/Avalonia/**"
+      - "tools/Screenshot/**"
+      - ".github/workflows/screenshot.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: screenshot
+  cancel-in-progress: true
+
+jobs:
+  screenshot:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Check for beta build
+        id: version
+        shell: bash
+        run: |
+          version=$(sed -n 's/.*<InformationalVersion>\([^<]*\)<\/InformationalVersion>.*/\1/p' src/Avalonia/Cardmarket-Price-Updater.App.csproj)
+          echo "Version: $version"
+          if [[ "$version" =~ b[0-9]+$ ]]; then
+            echo "Beta build - skipping screenshot."
+            echo "beta=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "beta=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Render screenshot
+        if: steps.version.outputs.beta != 'true'
+        run: dotnet run --project tools/Screenshot/Screenshot.csproj --configuration Debug -- images/cardmarketPriceUpdater.png
+
+      - name: Commit screenshot
+        if: steps.version.outputs.beta != 'true'
+        id: commit
+        shell: bash
+        run: |
+          git add images/cardmarketPriceUpdater.png
+          if git diff --cached --quiet; then
+            echo "Screenshot unchanged."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update screenshot"
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Notify website
+        if: steps.commit.outputs.changed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
+        run: |
+          gh api repos/ProfessorShroom/professorshroom.github.io/dispatches \
+            -f event_type=readme-updated \
+            -f "client_payload[repo]=${{ github.repository }}"

@@ -24,6 +24,12 @@ At the moment, the cardmarket ID is manual, but when Cardmarket open up their AP
 
 The prices are based on an average of everything, so 1st Edition and Unlimited, etc. Once Cardmarket open up the API, I will be able to specify this to 1st Edition as this is what collectors want.
 
+### Screenshot
+
+<p align="center">
+  <img src="images/cardmarketPriceUpdater.png" alt="Cardmarket Price Updater"/>
+</p>
+
 ### Platforms
 
 - **Windows** - Self-contained exe
