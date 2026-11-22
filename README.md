@@ -152,12 +152,12 @@ Run the executable from a terminal using these commands for headless use (same o
 
 | Image | Release Date | Game | Set Name | Set Code | Card Price (£) | Price Updated | Cardmarket ID | Rarity | Own? | Edition | Bought For (£) | Collection Value (£) | Remaining Cards |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|  | 08/03/2002 | Yu-Gi-Oh! | Legend of Blue-Eyes White Dragon | LOB-001 | £146.08 | 2026-11-17 | 102241 | Ultra Rare | ✔ | Unlimited | £50.00 | £0.00 | 1 |
-|  | 18/11/2008 | Yu-Gi-Oh! | Crossroads of Chaos | CSOC-EN039 | £311.19 | 2026-11-17 | 108490 | Ghost Rare | ✔ | ✔ | £500.00 | Amount Spent (£) | Upgrades Remaining |
-|  | 12/09/2025 | Yu-Gi-Oh! | Nike Collaboration Cards (special) | NKC1-EN002 | £392.36 | 2026-11-17 | 845882 | Prismatic Secret Rare | ✔ | PSA10 | £200.00 | £6,350.00 | 1 |
-|  | 09/01/1999 | Pokémon | Base Set | BS 4 | £2,040.39 | 2026-11-17 | 660224 | Holo rare | ✖ | ✖ |  | Amount to Complete Collection (£) | Total Cards |
-|  | 26/01/2024 | Pokémon | Paldean Fates | PAF 232 | £505.75 | 2026-11-17 | 751779 | SIR | ✔ | PSA9 | £600.00 | £0.00 | 5 |
-|  | 05/08/1993 | MTG | Alpha | LEA | £9,626.75 | 2026-11-17 | 5465 | Rare | ✔ | ✔ | £5,000.00 |  | % of Cards Owned |
+| <img src="https://raw.githubusercontent.com/ProfessorShroom/CardmarketPriceUpdater/main/images/template/cmu4f19833e511dc45b.jpg" alt="LOB-001" height="64"> | 03/08/2002 | Yu-Gi-Oh! | Legend of Blue-Eyes White Dragon | LOB-001 | £146.58 | 2026-11-22 | 102241 | Ultra Rare | ✔ | Unlimited | £50.00 | £11,011.86 | 1 |
+| <img src="https://raw.githubusercontent.com/ProfessorShroom/CardmarketPriceUpdater/main/images/template/cmu4f05ea5255e79ba5.jpg" alt="CSOC-EN039" height="64"> | 11/18/2008 | Yu-Gi-Oh! | Crossroads of Chaos | CSOC-EN039 | £312.26 | 2026-11-22 | 108490 | Ghost Rare | ✔ | ✔ | £500.00 | Amount Spent (£) | Upgrades Remaining |
+| <img src="https://raw.githubusercontent.com/ProfessorShroom/CardmarketPriceUpdater/main/images/template/cmu293d3cb602585c24.jpg" alt="NKC1-EN002" height="64"> | 09/12/2025 | Yu-Gi-Oh! | Nike Collaboration Cards (special) | NKC1-EN002 | £393.70 | 2026-11-22 | 845882 | Prismatic Secret Rare | ✔ | PSA10 | £200.00 | £6,350.00 | 1 |
+| <img src="https://raw.githubusercontent.com/ProfessorShroom/CardmarketPriceUpdater/main/images/template/cmu8ef98c36f19728a4.jpg" alt="BS 4" height="64"> | 01/09/1999 | Pokémon | Base Set | BS 4 | £2,055.49 | 2026-11-22 | 660224 | Holo rare | ✖ | ✖ |  | Amount to Complete Collection (£) | Total Cards |
+| <img src="https://raw.githubusercontent.com/ProfessorShroom/CardmarketPriceUpdater/main/images/template/cmu02c2154bc30db24d.jpg" alt="PAF 232" height="64"> | 01/26/2024 | Pokémon | Paldean Fates | PAF 232 | £499.69 | 2026-11-22 | 751779 | SIR | ✔ | PSA9 | £600.00 | £2,055.49 | 5 |
+| <img src="https://raw.githubusercontent.com/ProfessorShroom/CardmarketPriceUpdater/main/images/template/cmu7f1da396c84d9111.jpg" alt="LEA" height="64"> | 08/05/1993 | MTG | Alpha | LEA | £9,659.63 | 2026-11-22 | 5465 | Rare | ✔ | ✔ | £5,000.00 |  | % of Cards Owned |
 |  |  |  |  |  |  |  |  |  |  |  |  |  | 80.00% |
 
 <!-- template-table:end -->
