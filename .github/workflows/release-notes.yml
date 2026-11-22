@@ -1,0 +1,47 @@
+name: Release Notes
+
+on:
+  push:
+    tags:
+      - 'v*.*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ github.ref_name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # Use this version's "## <version>" section of CHANGELOG.md as the notes,
+      # or GitHub's generated notes if there isn't one. The other release
+      # workflows only attach files, so whichever runs first creates the release
+      # and this one sets (or overwrites) its notes either way.
+      - name: Set release notes from CHANGELOG.md
+        run: |
+          VERSION="${TAG#v}"
+          awk -v v="$VERSION" '
+            /^## / { if (on) exit; h = substr($0, 4); sub(/ - .*/, "", h); if (h == v) { on = 1; next } }
+            on
+          ' CHANGELOG.md > notes.md
+
+          if ! grep -q '[^[:space:]]' notes.md; then
+            echo "::warning::No '## ${VERSION}' section in CHANGELOG.md, using generated notes"
+            gh api "repos/${GH_REPO}/releases/generate-notes" -f tag_name="$TAG" --jq .body > notes.md
+          fi
+          cat notes.md
+
+          FLAGS=()
+          case "$VERSION" in *b*) FLAGS+=(--prerelease) ;; esac
+
+          if gh release view "$TAG" > /dev/null 2>&1 || \
+             ! gh release create "$TAG" --title "Cardmarket Price Updater ${TAG}" --notes-file notes.md "${FLAGS[@]}"; then
+            gh release edit "$TAG" --notes-file notes.md "${FLAGS[@]}"
+          fi

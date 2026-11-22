@@ -148,6 +148,8 @@ Run the executable from a terminal using these commands for headless use (same o
 
 ### Example Spreadsheet
 
+<!-- template-table:start -->
+
 | Image | Release Date | Game | Set Name | Set Code | Card Price (£) | Price Updated | Cardmarket ID | Rarity | Own? | Edition | Bought For (£) | Collection Value (£) | Remaining Cards |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 |  | 08/03/2002 | Yu-Gi-Oh! | Legend of Blue-Eyes White Dragon | LOB-001 | £146.08 | 2026-11-17 | 102241 | Ultra Rare | ✔ | Unlimited | £50.00 | £0.00 | 1 |
@@ -157,6 +159,8 @@ Run the executable from a terminal using these commands for headless use (same o
 |  | 26/01/2024 | Pokémon | Paldean Fates | PAF 232 | £505.75 | 2026-11-17 | 751779 | SIR | ✔ | PSA9 | £600.00 | £0.00 | 5 |
 |  | 05/08/1993 | MTG | Alpha | LEA | £9,626.75 | 2026-11-17 | 5465 | Rare | ✔ | ✔ | £5,000.00 |  | % of Cards Owned |
 |  |  |  |  |  |  |  |  |  |  |  |  |  | 80.00% |
+
+<!-- template-table:end -->
 
 #### Changelog
 

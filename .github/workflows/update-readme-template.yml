@@ -1,0 +1,82 @@
+name: Update README Template Table
+
+# Copies Template.ods into the "Example Spreadsheet" table in README.md
+# (between the <!-- template-table:start/end --> markers) whenever it's pushed,
+# with the card pictures copied to images/template/.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Template.ods"
+      - "scripts/template-to-readme.py"
+      - ".github/workflows/update-readme-template.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-readme-template
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install LibreOffice
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libreoffice-calc
+
+      # LibreOffice opens the sheet, recalculates every formula (the price
+      # updater writes new prices but doesn't recalculate totals), and saves the
+      # cells as they're shown, so prices keep their £ and dates their format.
+      - name: Export Template.ods to CSV
+        run: |
+          PROFILE="$RUNNER_TEMP/lo-profile"
+          mkdir -p "$PROFILE/user"
+          cat > "$PROFILE/user/registrymodifications.xcu" <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <oor:items xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+          <item oor:path="/org.openoffice.Office.Calc/Formula/Load"><prop oor:name="ODFRecalcMode" oor:op="fuse"><value>0</value></prop></item>
+          </oor:items>
+          EOF
+          soffice -env:UserInstallation="file://$PROFILE" --headless \
+            --convert-to 'csv:Text - txt - csv (StarCalc):44,34,76,1,,0,false,true,true' \
+            --outdir "$RUNNER_TEMP" Template.ods
+          test -s "$RUNNER_TEMP/Template.csv"
+
+      - name: Update README.md
+        run: python3 scripts/template-to-readme.py "$RUNNER_TEMP/Template.csv" Template.ods README.md
+
+      - name: Commit README.md and card images
+        id: commit
+        run: |
+          git add -A README.md images/template
+          if git diff --cached --quiet; then
+            echo "README table unchanged."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update README template table"
+          git pull --rebase
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      # Pushes made with GITHUB_TOKEN don't trigger other workflows, so
+      # notify-website.yml won't run for this commit. Tell the website directly.
+      - name: Notify website
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
+        run: |
+          gh api repos/ProfessorShroom/professorshroom.github.io/dispatches \
+            -f event_type=readme-updated \
+            -f "client_payload[repo]=${{ github.repository }}"
