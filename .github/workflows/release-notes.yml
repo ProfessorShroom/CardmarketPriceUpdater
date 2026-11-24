@@ -20,7 +20,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      # Use this version's "## <version>" section of CHANGELOG.md as the notes,
+      # Use this version's "## <version>" section of CHANGELOG.md (or CHANGELOG-BETA.md) as the notes,
       # or GitHub's generated notes if there isn't one. The other release
       # workflows only attach files, so whichever runs first creates the release
       # and this one sets (or overwrites) its notes either way.
@@ -30,7 +30,7 @@ jobs:
           awk -v v="$VERSION" '
             /^## / { if (on) exit; h = substr($0, 4); sub(/ - .*/, "", h); if (h == v) { on = 1; next } }
             on
-          ' CHANGELOG.md > notes.md
+          ' CHANGELOG.md CHANGELOG-BETA.md > notes.md
 
           if ! grep -q '[^[:space:]]' notes.md; then
             echo "::warning::No '## ${VERSION}' section in CHANGELOG.md, using generated notes"
