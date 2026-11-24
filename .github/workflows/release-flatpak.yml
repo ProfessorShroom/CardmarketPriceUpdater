@@ -86,6 +86,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           name: "Cardmarket Price Updater ${{ github.ref_name }}"
+          prerelease: ${{ contains(github.ref_name, 'b') }}
           files: CardmarketPriceUpdater.flatpak
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

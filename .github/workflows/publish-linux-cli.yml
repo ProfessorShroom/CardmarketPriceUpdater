@@ -40,6 +40,7 @@ jobs:
           # (so it doesn't matter whether this job or another one runs first).
           tag_name: ${{ github.ref_name }}
           name: "Cardmarket Price Updater ${{ github.ref_name }}"
+          prerelease: ${{ contains(github.ref_name, 'b') }}
           files: CardmarketPriceUpdater-linux-x64.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

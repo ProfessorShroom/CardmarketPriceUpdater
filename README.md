@@ -173,4 +173,90 @@ Run the executable from a terminal using these commands for headless use (same o
 - **_2.3.0.1_** Stopped Cardmarket from rejecting image download requests.
 - **_2.3.0.0_** Added an image field to the spreadsheet (this is optional, but a nice touch), the software can download an image of the card from Cardmarket and please at in the first column.
 
-Older updates are in [CHANGELOG.md](CHANGELOG.md).
+
+#### Older Updates
+
+<details markdown="1">
+<summary><strong>Version 2.x - The .NET 8 / Avalonia Update</strong></summary>
+
+**Version 2.2.0.1 / 2.2.0.0**
+
+- **_2.2.0.1_** Corrected some comments and dates.
+- **_2.2.0.0_** Added support for LibreOffice / OpenOffice spreadsheets (`.ods`) alongside `.xlsx`. Prices and the Price Updated date are written straight into the `.ods` file, and the rest of the file (styles, column widths, currency formatting, other sheets) is left untouched. No LibreOffice install is needed.
+- **_2.2.0.0_** The GUI file picker now offers `.xlsx` and `.ods` (with an "all spreadsheets" filter), and the CLI `/d` flag now picks up `.ods` files as well as `.xlsx` ones.
+- **_2.2.0.0_** CLI `/d` now matches `.xlsx`/`.ods` case-insensitively on Linux and skips Excel's temporary `~$` lock files.
+- **_2.2.0.0_** An empty sheet no longer crashes the program when it looks for the column headers.
+
+**Version 2.1.0.0**
+
+- **_2.1.0.0_** Added a game dropdown to the GUI and a `/g` flag to the CLI (`/g y` Yu-Gi-Oh!, `/g m` Magic: The Gathering, `/g p` Pokémon) to choose the default game. The choice is remembered as `defaultGame` in the config file.
+- **_2.1.0.0_** The `Game` column is now optional. If a sheet has no Game column, every row uses the default game, which is Yu-Gi-Oh! unless you choose another.
+- **_2.1.0.0_** Prices are now checked against the correct game for each row instead of all three games at once, and only the price guides for games actually in your sheet are downloaded. Blank or unrecognised Game cells fall back to the default game.
+- **_2.1.0.0_** Fixed a temp file being left behind when the required column headers could not be found.
+- **_2.1.0.0_** Fixed the README config example using the wrong (PascalCase) key names.
+
+**Version 2.0.3.2 / 2.0.3.1 / 2.0.3.0**
+
+- **_2.0.3.2_** Fixed Flatpak crash due to missing argument in dotnot build command.
+- **_2.0.3.1_** Moved `update.xml` back to the repo root (pre-2.0 installs expect it there) and updated the update-checker URL, docs, and project layout references to match.
+- **_2.0.3.1_** Fixed the Linux CLI release workflow failing with a 403 - it was missing the `contents: write` permission the other two release workflows already had, so it couldn't create/attach to the release.
+- **_2.0.3.1_** Fixed a few leftover references to the old hyphenated repo name (`Cardmarket-Price-Updater`) in the README and update-checker URL, pointing them at the current `CardmarketPriceUpdater`.
+- **_2.0.3.0_** Added a self-contained Linux `linux-x64` CLI build, published alongside the exe and Flatpak on every release - lets headless/server users run the CLI directly with no Flatpak, GUI runtime, or display required.
+- **_2.0.3.0_** Releases are now fully automated: pushing a version tag (`vx.x.x.x`) builds and attaches the Windows exe, the Flatpak bundle, and the Linux CLI tarball to the release, no manual upload needed.
+- **_2.0.3.0_** Fixed `packaging/flatpak/io.github.professorshroom.CardmarketPriceUpdater.yml` - it was still cloning an old hyphenated repo name pinned to `v2.0.2.0` instead of building from your local checkout. It now builds from a local publish output, matching what the packaging docs always said it did.
+
+**Version 2.0.2.0**
+
+- **_2.0.2.0_** Removed Flathub compliance, it's too strict and not worth the hassle.
+
+**Version 2.0.1.0**
+
+- **_2.0.1.0_** Flathub compliance fixes for the Flatpak packaging (metadata/manifest cleanup) - no functional changes to the app itself.
+
+**Version 2.0.0.0 - The .NET 8 / Avalonia Update**
+
+- **_2.0.0.0_** Added USD ($) as a third currency alongside GBP and EUR.
+- **_2.0.0.0_** Added a small JSON config file for default currency/price type and retry/backup settings, created automatically on first run.
+- **_2.0.0.0_** Rewrote the GUI in Avalonia instead of WinForms, so it now runs on Linux (Ubuntu/Fedora, packaged as a Flatpak) as well as Windows, from one shared codebase.
+- **_2.0.0.0_** Downloads now retry automatically with backoff instead of failing the run on one bad request.
+- **_2.0.0.0_** Backups are now timestamped and kept in a `Backups` folder with automatic pruning, instead of a single overwritten `.bak` file.
+- **_2.0.0.0_** Replaced AutoUpdater.NET.Official (which required WinForms and blocked a Linux build entirely) with a small built-in update checker on Windows - it now shows a "new version available" link instead of silently self-updating.
+
+</details>
+
+<details markdown="1">
+<summary><strong>Version 1.x - The Initial Release</strong></summary>
+
+**Version 1.4.0.0**
+
+- **_1.4.0.0_** Added auto update feature.
+- **_1.4.0.0_** Changed quiet mode to actually hide the CLI completely.
+
+**Version 1.3.0.0**
+
+- **_1.3.0.0_** Added support to select pricing model; Trending Price, 7-Day Average Price and 30-Day Average Price. By default, it is set to 30-Day Average Price, but you can change it to Trending or 7-Day Average Price if you want a more stable price.
+- **_1.3.0.0_** Updated GUI to a more modern look.
+
+**Version 1.2.0.0**
+
+- **_1.2.0.0_** Added cmd/terminal support.
+- **_1.2.0.0_** /f lets you specify a file.
+- **_1.2.0.0_** /d lets you specify a directory.
+- **_1.2.0.0_** /c lets you specify a currency.
+- **_1.2.0.0_** /log lets you log to a file.
+- **_1.2.0.0_** /q, /quiet, /s, /silent runs the exe silently.
+
+**Version 1.1.2.0**
+
+- **_1.1.2.0_** Updated EUR to GBP conversion link.
+
+**Version 1.1.1.0**
+
+- **_1.1.1.0_** Moved Version/Readme link to [professorshroom.com](https://professorshroom.com)
+
+**Version 1.1.0.0**
+
+- **_1.1.0.0_** Added Game to spreadsheet to specify the card game.
+- **_1.1.0.0_** Will now check prices against the correct game instead of checking all.
+
+</details>
