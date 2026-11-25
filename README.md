@@ -166,18 +166,30 @@ Run the executable from a terminal using these commands for headless use (same o
 
 #### Latest Update
 
-**Version 2.3.0.2 / 2.3.0.1 / 2.3.0.0**
+**Version 3.0.0.0 - The .NET 10 Update**
 
-- **_2.3.0.2_** Corrected how images are download, set codes aren't always consistent. This will require more updates as I go and find additional set codes that don't work.
-- **_2.3.0.1_** Widened window as the close button was cut off.
-- **_2.3.0.1_** Stopped Cardmarket from rejecting image download requests.
-- **_2.3.0.0_** Added an image field to the spreadsheet (this is optional, but a nice touch), the software can download an image of the card from Cardmarket and please at in the first column.
+- **_3.0.0.0_** Upgraded from .NET 8 to .NET 10.
+- **_3.0.0.0_** Upgraded Avalonia from 11.2.1 to 12.2.0.
+- **_3.0.0.0_** Upgraded EPPlus from 8.6.1 to 8.7.3.
+- **_3.0.0.0_** Changed the license from Apache 2.0 to a Personal Use License.
+- **_3.0.0.0_** The Flatpak release information and `update.xml` now update automatically on release.
+- **_3.0.0.0_** `update.xml` is only updated once the new Windows exe is available to download.
+- **_3.0.0.0_** Fixed known security vulnerabilities in packages used by EPPlus (`System.Security.Cryptography.Xml` and `System.Security.Cryptography.Pkcs`).
+- **_3.0.0.0_** Corrected the license, links and release information in the Flatpak metadata.
+- **_3.0.0.0_** Removed the leftover Flathub packaging (`nuget-sources.json`, the Flathub manifest and its docs). The Flatpak download on the releases page is unaffected.
 
 
 #### Older Updates
 
 <details markdown="1">
 <summary><strong>Version 2.x - The .NET 8 / Avalonia Update</strong></summary>
+
+**Version 2.3.0.2 / 2.3.0.1 / 2.3.0.0**
+
+- **_2.3.0.2_** Corrected how images are download, set codes aren't always consistent. This will require more updates as I go and find additional set codes that don't work.
+- **_2.3.0.1_** Widened window as the close button was cut off.
+- **_2.3.0.1_** Stopped Cardmarket from rejecting image download requests.
+- **_2.3.0.0_** Added an image field to the spreadsheet (this is optional, but a nice touch), the software can download an image of the card from Cardmarket and please at in the first column.
 
 **Version 2.2.0.1 / 2.2.0.0**
 
