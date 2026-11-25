@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using Avalonia;
 using Avalonia.Headless;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 
 // Copyright © Charlie Howard 2025-2026 All rights reserved
@@ -34,7 +35,7 @@ namespace Cardmarket_Price_Updater.Tools.Screenshot
 
             var frame = window.CaptureRenderedFrame()
                 ?? throw new InvalidOperationException("No frame was rendered.");
-            frame.Save(output);
+            frame.Save(output, PngBitmapEncoderOptions.Default);
             Console.WriteLine($"Saved {output}");
 
             Environment.Exit(0);

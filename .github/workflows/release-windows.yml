@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Publish self-contained win-x64
         run: |
@@ -42,3 +42,37 @@ jobs:
           files: CardmarketPriceUpdater.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-xml:
+    needs: build
+    if: ${{ !contains(github.ref_name, 'b') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Switch to main, keeping the tagged project file
+        run: |
+          git checkout -B main origin/main
+          git checkout "$GITHUB_SHA" -- src/Avalonia/Cardmarket-Price-Updater.App.csproj
+          git reset -q
+
+      - name: Update update.xml
+        run: python3 scripts/update_xml.py "$GITHUB_REF_NAME"
+
+      - name: Commit update.xml
+        run: |
+          git checkout -- src/Avalonia/Cardmarket-Price-Updater.App.csproj
+          git add update.xml
+          if git diff --cached --quiet; then
+            echo "update.xml unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update update.xml to ${GITHUB_REF_NAME#v}"
+          git pull --rebase origin main
+          git push origin main

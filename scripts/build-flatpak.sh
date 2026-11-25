@@ -20,7 +20,7 @@ cd packaging/flatpak
 rm -rf .flatpak-builder builddir repo
 
 flatpak uninstall -y --user io.github.professorshroom.CardmarketPriceUpdater 2>/dev/null || true
-flatpak run --command=flathub-build org.flatpak.Builder --install io.github.professorshroom.CardmarketPriceUpdater.yml
+flatpak run org.flatpak.Builder --user --install --install-deps-from=flathub --force-clean --repo=repo builddir io.github.professorshroom.CardmarketPriceUpdater.yml
 flatpak build-bundle repo CardmarketPriceUpdater.flatpak io.github.professorshroom.CardmarketPriceUpdater
 
 echo "Running..."

@@ -5,7 +5,7 @@
 <summary>Update card collection prices from Cardmarket in a spreadsheet</summary>
 
 <metadata_license>CC0-1.0</metadata_license>
-<project_license>MIT</project_license>
+<project_license>LicenseRef-proprietary=https://github.com/ProfessorShroom/CardmarketPriceUpdater/blob/main/LICENSE.md</project_license>
 
 <developer id="com.professorshroom">
   <name>ProfessorShroom</name>
@@ -22,12 +22,27 @@
 
   <launchable type="desktop-id">io.github.professorshroom.CardmarketPriceUpdater.desktop</launchable>
 
-  <url type="homepage">https://github.com/ProfessorShroom/Cardmarket-Price-Updater</url>
-  <url type="bugtracker">https://github.com/ProfessorShroom/Cardmarket-Price-Updater/issues</url>
+  <url type="homepage">https://github.com/ProfessorShroom/CardmarketPriceUpdater</url>
+  <url type="bugtracker">https://github.com/ProfessorShroom/CardmarketPriceUpdater/issues</url>
 
   <content_rating type="oars-1.1" />
 
   <releases>
+    <release version="3.0.0.0" date="2026-11-25">
+      <description>
+        <ul>
+          <li>Upgraded from .NET 8 to .NET 10.</li>
+          <li>Upgraded Avalonia from 11.2.1 to 12.2.0.</li>
+          <li>Upgraded EPPlus from 8.6.1 to 8.7.3.</li>
+          <li>Changed the license from Apache 2.0 to a Personal Use License.</li>
+          <li>The Flatpak release information and update.xml now update automatically on release.</li>
+          <li>update.xml is only updated once the new Windows exe is available to download.</li>
+          <li>Fixed known security vulnerabilities in packages used by EPPlus (System.Security.Cryptography.Xml and System.Security.Cryptography.Pkcs).</li>
+          <li>Corrected the license, links and release information in the Flatpak metadata.</li>
+          <li>Removed the leftover Flathub packaging (nuget-sources.json, the Flathub manifest and its docs). The Flatpak download on the releases page is unaffected.</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.2" date="2026-09-01">
       <description>
         <p>Cross-platform Avalonia GUI, USD support, download retry/backoff,

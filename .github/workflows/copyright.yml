@@ -22,13 +22,16 @@ jobs:
           # 1. Update README.md (updates year range and strips any trailing period)
           sed -i -E "s/Copyright © Charlie Howard 2025-[0-9]{4}\.?/Copyright © Charlie Howard 2025-$CURRENT_YEAR/g" README.md
 
-          # 2. Update all .cs files: converts single year/old ranges to 2025-YYYY and removes the trailing period
+          # 2. Update LICENSE.md
+          sed -i -E "s/Copyright © 2025-[0-9]{4} Charlie Howard/Copyright © 2025-$CURRENT_YEAR Charlie Howard/" LICENSE.md
+
+          # 3. Update all .cs files: converts single year/old ranges to 2025-YYYY and removes the trailing period
           find . -type f -name "*.cs" -exec sed -i -E "s/\/\/\s*Copyright © Charlie Howard (2025-[0-9]{4}|[0-9]{4}) All rights reserved\./\/\/ Copyright © Charlie Howard 2025-$CURRENT_YEAR All rights reserved/g" {} +
 
       - name: Commit and push changes
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add README.md '*.cs'
+          git add README.md LICENSE.md '*.cs'
           # Only commit if changes were actually made
           git diff --staged --quiet || (git commit -m "Update Copyright year range to 2025-$(date +%Y)" && git push)

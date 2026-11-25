@@ -1,4 +1,4 @@
-name: Update README Changelog
+name: Update README Changelog and Appdata
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
     paths:
       - "CHANGELOG.md"
       - "scripts/readme_changelog.py"
+      - "scripts/appdata_release.py"
       - ".github/workflows/update-readme-changelog.yml"
   workflow_dispatch:
 
@@ -28,15 +29,18 @@ jobs:
       - name: Update README.md
         run: python3 scripts/readme_changelog.py
 
-      - name: Commit README.md
+      - name: Update appdata
+        run: python3 scripts/appdata_release.py
+
+      - name: Commit changes
         run: |
-          git add README.md
+          git add README.md packaging/flatpak/io.github.professorshroom.CardmarketPriceUpdater.appdata.xml
           if git diff --cached --quiet; then
-            echo "README changelog unchanged."
+            echo "README changelog and appdata unchanged."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Update README changelog"
+          git commit -m "Update README changelog and appdata"
           git pull --rebase origin main
           git push origin main

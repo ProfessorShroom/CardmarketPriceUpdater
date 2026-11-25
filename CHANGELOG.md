@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.0.0.0 - The .NET 10 Update
+
+### Changed
+- Upgraded from .NET 8 to .NET 10.
+- Upgraded Avalonia from 11.2.1 to 12.2.0.
+- Upgraded EPPlus from 8.6.1 to 8.7.3.
+- Changed the license from Apache 2.0 to a Personal Use License.
+- The Flatpak release information and `update.xml` now update automatically on release.
+- `update.xml` is only updated once the new Windows exe is available to download.
+
+### Fixed
+- Fixed known security vulnerabilities in packages used by EPPlus (`System.Security.Cryptography.Xml` and `System.Security.Cryptography.Pkcs`).
+- Corrected the license, links and release information in the Flatpak metadata.
+
+### Removed
+- Removed the leftover Flathub packaging (`nuget-sources.json`, the Flathub manifest and its docs). The Flatpak download on the releases page is unaffected.
+
 ## 2.3.0.2
 
 ### Fixed

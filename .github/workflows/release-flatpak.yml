@@ -16,10 +16,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Add this release to the appdata
+        run: python3 scripts/appdata_release.py "$GITHUB_REF_NAME" "$(date +%F)"
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Publish self-contained linux-x64
         run: |
@@ -35,10 +38,6 @@ jobs:
           sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
           sudo flatpak install --system --noninteractive flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
 
-      # Builds from the binary published above rather than the committed
-      # packaging/flatpak manifest, which currently clones a hardcoded tag
-      # (v2.0.2.0) from an old hyphenated repo URL - worth fixing separately,
-      # but this sidesteps it and always packages exactly what was tagged.
       - name: Write Flatpak manifest
         run: |
           cat > ci-manifest.yml <<'EOF'

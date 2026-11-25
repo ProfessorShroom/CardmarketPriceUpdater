@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Cardmarket_Price_Updater.Core</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -11,6 +11,6 @@
     <InformationalVersion>1.5.0.0</InformationalVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="EPPlus" Version="8.6.1" />
+    <PackageReference Include="EPPlus" Version="8.7.3" />
   </ItemGroup>
 </Project>
