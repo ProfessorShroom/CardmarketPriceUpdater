@@ -180,6 +180,10 @@ namespace Cardmarket_Price_Updater
                 }
 
                 AppendLog("All files complete.");
+
+                string last = files[^1].Path.LocalPath;
+                if (Collection.CurrentPath == null || PathsEqual(Collection.CurrentPath, last))
+                    _ = Collection.LoadAsync(last);
             }
             catch (Exception ex)
             {
@@ -190,6 +194,10 @@ namespace Cardmarket_Price_Updater
                 StartButton.IsEnabled = true;
             }
         }
+
+        private static bool PathsEqual(string a, string b) =>
+            string.Equals(System.IO.Path.GetFullPath(a), System.IO.Path.GetFullPath(b),
+                RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 
         private static void OpenUrl(string url)
         {

@@ -1,5 +1,27 @@
 # Changelog
 
+## 4.0.0.0 - The Collection Update
+
+### Added
+- Added a Collection tab that shows every card in a spreadsheet as a tile with its image, set, rarity, price, edition and what you paid for it.
+- Cards can be shown or hidden by status (Owned, Needs upgrade, Not owned), with quick Only upgrades / Only not owned / Show all buttons.
+- Added search by name, set name, set code, rarity or Cardmarket ID, a game filter, and sorting by price, release date, set or status.
+- Added a summary bar with the value of the cards shown, collection value, amount spent, cost to complete and the percentage owned.
+- Cards can be edited from the Collection tab: click a card to set its Edition and Bought For, then save straight back to the spreadsheet. A backup is made before the first change to each file, and saving is refused while the file is open in LibreOffice or Excel.
+- Added an Add image button to the card editor for cards whose image couldn't be downloaded. Pick a JPG, PNG, WebP, BMP or GIF and it is placed in the card's Image cell, replacing any existing picture, and saved to the image cache. Large images are shrunk automatically.
+- Cards you pulled yourself can be marked as Pulled in the card editor. This saves "Pulled" in Bought For instead of a price, counts as nothing spent, and the summary bar shows how many cards you pulled and what they're worth.
+- Edition badges use the same colours as the template: PSA10 is purple with gold, PSA9 is purple, upgrades are blue, owned is green and not owned is red.
+
+### Changed
+- The main window now has two tabs, Update Prices and Collection, and opens larger.
+- After a price update the Collection tab loads the updated spreadsheet so the new prices show straight away.
+
+### Fixed
+- Totals such as Collection Value and Amount Spent are now correct when the spreadsheet is opened after an update, instead of showing old values until it is recalculated.
+- The template's Bought For colouring now shows Pulled in green instead of red.
+- Log lines in the app and the CLI no longer show the time twice.
+- The template's Total Cards now counts every card rather than only owned ones, so % of Cards Owned is correct.
+
 ## 3.0.0.0 - The .NET 10 Update
 
 ### Changed

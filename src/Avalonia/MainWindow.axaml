@@ -1,13 +1,23 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Cardmarket_Price_Updater"
         x:Class="Cardmarket_Price_Updater.MainWindow"
         Title="Cardmarket Price Updater"
-        Width="980" Height="500"
-        MinWidth="720" MinHeight="380"
+        Width="1180" Height="780"
+        MinWidth="720" MinHeight="460"
         Background="#1E1E1E"
         Icon="/Assets/app-icon.ico">
 
   <Window.Styles>
+    <Style Selector="TabControl /template/ ItemsPresenter#PART_ItemsPresenter">
+      <Setter Property="Margin" Value="8,0,0,0" />
+    </Style>
+    <Style Selector="TabItem">
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="MinHeight" Value="44" />
+      <Setter Property="Padding" Value="10,0" />
+    </Style>
+
     <Style Selector="Button.flat">
       <Setter Property="Background" Value="#3C3C3C" />
       <Setter Property="Foreground" Value="White" />
@@ -69,49 +79,59 @@
   </Window.Styles>
 
   <DockPanel>
-    <Border DockPanel.Dock="Top" Background="#282828" Padding="12,10">
-      <Grid ColumnDefinitions="*,Auto">
-        <!-- Wraps onto a second line instead of clipping when the window is narrow -->
-        <WrapPanel Grid.Column="0" Orientation="Horizontal">
-          <Button x:Name="StartButton" Classes="flat" Content="Get Prices (Browse Files)"
-                  Margin="0,0,10,4" VerticalAlignment="Center" />
-
-          <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,10,4" VerticalAlignment="Center">
-            <ToggleButton x:Name="CurrencyGbp" Classes="currency" Content="£" IsChecked="True" />
-            <ToggleButton x:Name="CurrencyEur" Classes="currency" Content="€" />
-            <ToggleButton x:Name="CurrencyUsd" Classes="currency" Content="$" />
-          </StackPanel>
-
-          <ComboBox x:Name="PriceTypeCombo" Width="170" Margin="0,0,8,4" VerticalAlignment="Center" />
-
-          <ComboBox x:Name="GameCombo" Width="190" Margin="0,0,10,4" VerticalAlignment="Center"
-                    ToolTip.Tip="Game to use when the spreadsheet has no Game column (or a blank Game cell)" />
-
-          <CheckBox x:Name="ImagesCheck" Content="Card images" Foreground="White"
-                    Margin="0,0,10,4" VerticalAlignment="Center"
-                    ToolTip.Tip="Add card thumbnails to the Image column (only used if the spreadsheet has an Image column and a Set Code column)" />
-        </WrapPanel>
-
-        <Button x:Name="CloseButton" Grid.Column="1" Classes="flat" Content="Close"
-                VerticalAlignment="Top" Margin="10,0,0,0" />
-      </Grid>
-    </Border>
-
     <Border DockPanel.Dock="Bottom" Padding="12,6">
       <Button x:Name="VersionLink" Classes="link" HorizontalAlignment="Left" />
     </Border>
 
-    <Border Padding="12,10,12,0">
-      <TextBox x:Name="OutputBox"
-               Background="#2D2D2D"
-               Foreground="White"
-               BorderThickness="0"
-               FontFamily="Consolas,Menlo,monospace"
-               FontSize="13"
-               IsReadOnly="True"
-               AcceptsReturn="True"
-               TextWrapping="NoWrap"
-               VerticalContentAlignment="Top" />
-    </Border>
+    <Grid>
+      <TabControl x:Name="Tabs" Padding="0" Margin="0">
+        <TabItem Header="Update Prices">
+          <DockPanel>
+            <Border DockPanel.Dock="Top" Background="#282828" Padding="12,10">
+              <!-- Wraps onto a second line instead of clipping when the window is narrow -->
+              <WrapPanel Orientation="Horizontal">
+                <Button x:Name="StartButton" Classes="flat" Content="Get Prices (Browse Files)"
+                        Margin="0,0,10,4" VerticalAlignment="Center" />
+
+                <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,10,4" VerticalAlignment="Center">
+                  <ToggleButton x:Name="CurrencyGbp" Classes="currency" Content="£" IsChecked="True" />
+                  <ToggleButton x:Name="CurrencyEur" Classes="currency" Content="€" />
+                  <ToggleButton x:Name="CurrencyUsd" Classes="currency" Content="$" />
+                </StackPanel>
+
+                <ComboBox x:Name="PriceTypeCombo" Width="170" Margin="0,0,8,4" VerticalAlignment="Center" />
+
+                <ComboBox x:Name="GameCombo" Width="190" Margin="0,0,10,4" VerticalAlignment="Center"
+                          ToolTip.Tip="Game to use when the spreadsheet has no Game column (or a blank Game cell)" />
+
+                <CheckBox x:Name="ImagesCheck" Content="Card images" Foreground="White"
+                          Margin="0,0,10,4" VerticalAlignment="Center"
+                          ToolTip.Tip="Add card thumbnails to the Image column (only used if the spreadsheet has an Image column and a Set Code column)" />
+              </WrapPanel>
+            </Border>
+
+            <Border Padding="12,10,12,0">
+              <TextBox x:Name="OutputBox"
+                       Background="#2D2D2D"
+                       Foreground="White"
+                       BorderThickness="0"
+                       FontFamily="Consolas,Menlo,monospace"
+                       FontSize="13"
+                       IsReadOnly="True"
+                       AcceptsReturn="True"
+                       TextWrapping="NoWrap"
+                       VerticalContentAlignment="Top" />
+            </Border>
+          </DockPanel>
+        </TabItem>
+
+        <TabItem Header="Collection">
+          <local:CollectionView x:Name="Collection" />
+        </TabItem>
+      </TabControl>
+
+      <Button x:Name="CloseButton" Classes="flat" Content="Close"
+              HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,12,0" />
+    </Grid>
   </DockPanel>
 </Window>

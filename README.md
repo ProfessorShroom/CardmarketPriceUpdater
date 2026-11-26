@@ -102,7 +102,24 @@ Another way to obtain the ID is by going to the card listing page and opening in
 
 The value is what you put in Cardmarket ID.
 
-Own? and Bought For are only required if you want to use the collection value part of the sheet, as this will add up the values of the cards you own and show you the amount left to spend. These values are an average so not 100% accurate but it's better than nothing.
+Own? and Bought For are only required if you want to use the collection value part of the sheet, as this will add up the values of the cards you own and show you the amount left to spend. These values are an average so not 100% accurate but it's better than nothing. If you pulled a card yourself, put `Pulled` in Bought For instead of a price; it counts as nothing spent.
+
+### Collection Viewer
+
+Open the **Collection** tab in the app to browse a spreadsheet visually: every card is shown as a tile with its image, set, rarity, price, edition and what you paid for it.
+
+- **Status filters** - each card is put into one of three groups, using the same rules as the template's Edition column:
+  - **Owned** - ✔, 1st Edition, PSA9, PSA10, etc.
+  - **Needs upgrade** - Unlimited, or PSA1 to PSA8
+  - **Not owned** - ✖ (or blank)
+
+  Click a group to show or hide it, or use **Only upgrades** / **Only not owned** / **Show all**.
+- **Search** by card name, set name, set code, rarity or Cardmarket ID, filter by game, and sort by price, release date, set or status.
+- The bar at the bottom shows the value of the cards on screen, your collection value, amount spent, cost to complete and how much of the collection you own.
+- Images come from the sheet's Image column, or from the app's `ImageCache` if the sheet doesn't have one.
+- If a card's image couldn't be downloaded, open it in the editor and press **Add image...** to choose a picture yourself (JPG, PNG, WebP, BMP or GIF). It goes into the card's Image cell, replacing any picture already there, and into the `ImageCache` so price updates reuse it.
+- **Editing** - click a card to open it in the side panel, pick its Edition (or use the ✔ / 1st Edition / Limited / Unlimited / ✖ buttons), enter what you paid in **Bought for**, and press **Save** (or Enter). Only the Edition and Bought For cells are changed; Own? and the summary cells update themselves. A backup is made before the first change to each file, and saving is refused while the file is open in LibreOffice or Excel, so your change isn't overwritten.
+- After you update prices on the **Update Prices** tab, the Collection tab loads that spreadsheet automatically. **Reload** re-reads it if you've edited the file yourself.
 
 ### Backups
 

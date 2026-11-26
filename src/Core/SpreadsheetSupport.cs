@@ -23,6 +23,18 @@ namespace Cardmarket_Price_Updater.Core
         void SetText(int row, int col, string value);
         bool HasImage(int row, int col);
         void SetImage(int row, int col, byte[] data);
+        byte[]? GetImage(int row, int col);
+        void Clear(int row, int col);
+        bool HasFormula(int row, int col);
+    }
+
+    internal static class XlsxFormulas
+    {
+        public static void Recalculate(ExcelPackage pkg)
+        {
+            try { pkg.Workbook.Calculate(); } catch { }
+            pkg.Workbook.FullCalcOnLoad = true;
+        }
     }
 
     internal sealed class EpplusSheet : ISheet
@@ -37,9 +49,17 @@ namespace Cardmarket_Price_Updater.Core
         public string GetText(int row, int col) => _ws.Cells[row, col].Text;
         public void SetNumber(int row, int col, decimal value) => _ws.Cells[row, col].Value = value;
         public void SetText(int row, int col, string value) => _ws.Cells[row, col].Value = value;
+        public void Clear(int row, int col) => _ws.Cells[row, col].Value = null;
+        public bool HasFormula(int row, int col) => !string.IsNullOrEmpty(_ws.Cells[row, col].Formula);
 
         public bool HasImage(int row, int col) =>
             _ws.Drawings.Any(d => d.From.Row == row - 1 && d.From.Column == col - 1);
+
+        public byte[]? GetImage(int row, int col) =>
+            _ws.Drawings
+                .OfType<OfficeOpenXml.Drawing.ExcelPicture>()
+                .FirstOrDefault(d => d.From.Row == row - 1 && d.From.Column == col - 1)?
+                .Image.ImageBytes;
 
         public void SetImage(int row, int col, byte[] data)
         {
@@ -47,6 +67,13 @@ namespace Cardmarket_Price_Updater.Core
             const double pointsPerCm = 72.0 / ImageLayout.CmPerInch;
 
             var (wCm, hCm) = ImageInfo.FitCm(data);
+
+            for (int i = _ws.Drawings.Count - 1; i >= 0; i--)
+            {
+                var d = _ws.Drawings[i];
+                if (d is OfficeOpenXml.Drawing.ExcelPicture && d.From.Row == row - 1 && d.From.Column == col - 1)
+                    _ws.Drawings.Remove(i);
+            }
 
             _ws.Row(row).Height = ImageLayout.RowHeightCm * pointsPerCm;
             _ws.Column(col).Width = Math.Max(_ws.Column(col).Width, (ImageLayout.ColumnWidthCm * pxPerCm - 5) / 7.0);
@@ -82,6 +109,7 @@ namespace Cardmarket_Price_Updater.Core
         private bool _imageStylesReady;
 
         public OdsSheet FirstSheet { get; }
+        public string FirstSheetName { get; }
 
         private OdsWorkbook(byte[] original, XDocument content)
         {
@@ -96,11 +124,13 @@ namespace Cardmarket_Price_Updater.Core
                 ?? throw new InvalidDataException("This .ods file doesn't contain a spreadsheet with any sheets.");
 
             FirstSheet = new OdsSheet(sheetEl, this);
+            FirstSheetName = (string?)sheetEl.Attribute(Table + "name") ?? string.Empty;
         }
 
-        public static OdsWorkbook Load(string path)
+        public static OdsWorkbook Load(string path) => Load(File.ReadAllBytes(path));
+
+        public static OdsWorkbook Load(byte[] bytes)
         {
-            byte[] bytes = File.ReadAllBytes(path);
             using var zip = new ZipArchive(new MemoryStream(bytes), ZipArchiveMode.Read);
 
             var entry = zip.GetEntry("content.xml")
@@ -117,6 +147,21 @@ namespace Cardmarket_Price_Updater.Core
                 throw new InvalidDataException(
                     "Could not read content.xml from the .ods file - is it password protected or corrupt? " + ex.Message, ex);
             }
+        }
+
+        internal byte[]? ReadEntry(string entryPath)
+        {
+            if (_newPictures.TryGetValue(entryPath, out var pic))
+                return pic.Data;
+
+            using var zip = new ZipArchive(new MemoryStream(_original), ZipArchiveMode.Read);
+            var entry = zip.GetEntry(entryPath.TrimStart('.', '/'));
+            if (entry == null) return null;
+
+            using var s = entry.Open();
+            using var ms = new MemoryStream();
+            s.CopyTo(ms);
+            return ms.ToArray();
         }
 
         private void EnsureImageStyles()
@@ -169,8 +214,29 @@ namespace Cardmarket_Price_Updater.Core
             return path;
         }
 
+        private void ClearFormulaResults()
+        {
+            foreach (var cell in _content.Descendants(Table + "table-cell"))
+            {
+                if (cell.Attribute(Table + "formula") == null)
+                    continue;
+
+                cell.SetAttributeValue(Office + "value", null);
+                cell.SetAttributeValue(Office + "string-value", null);
+                cell.SetAttributeValue(Office + "boolean-value", null);
+                cell.SetAttributeValue(Office + "date-value", null);
+                cell.SetAttributeValue(Office + "time-value", null);
+                cell.SetAttributeValue(Office + "value-type", null);
+                cell.SetAttributeValue(Office + "currency", null);
+                cell.SetAttributeValue(CalcExt + "value-type", null);
+                cell.Elements(Text + "p").Remove();
+            }
+        }
+
         public void Save(string path)
         {
+            ClearFormulaResults();
+
             using var src = new ZipArchive(new MemoryStream(_original), ZipArchiveMode.Read);
             using var outStream = new FileStream(path, FileMode.Create, FileAccess.Write);
             using var dst = new ZipArchive(outStream, ZipArchiveMode.Create);
@@ -323,6 +389,29 @@ namespace Cardmarket_Price_Updater.Core
                 cell.Add(new XElement(Text + "p", value));
             }
 
+            public void Clear(int row, int col)
+            {
+                var cell = GetCellForWrite(row, col);
+                ClearValue(cell);
+                cell.SetAttributeValue(Office + "value-type", null);
+                cell.SetAttributeValue(Office + "currency", null);
+                cell.SetAttributeValue(CalcExt + "value-type", null);
+            }
+
+            public bool HasFormula(int row, int col) =>
+                FindCell(row, col)?.Attribute(Table + "formula") != null;
+
+            private XElement? FindCell(int row, int col)
+            {
+                int idx = FindRowIndex(row);
+                if (idx < 0) return null;
+
+                foreach (var span in CellSpans(_rows[idx].El))
+                    if (col >= span.Start && col < span.Start + span.Count)
+                        return span.El;
+                return null;
+            }
+
             public bool HasImage(int row, int col)
             {
                 int idx = FindRowIndex(row);
@@ -333,6 +422,25 @@ namespace Cardmarket_Price_Updater.Core
                         return span.El.Elements(Draw + "frame").Any();
 
                 return false;
+            }
+
+            public byte[]? GetImage(int row, int col)
+            {
+                int idx = FindRowIndex(row);
+                if (idx < 0) return null;
+
+                foreach (var span in CellSpans(_rows[idx].El))
+                {
+                    if (col < span.Start || col >= span.Start + span.Count) continue;
+
+                    var href = span.El.Elements(Draw + "frame")
+                        .Elements(Draw + "image")
+                        .Select(i => (string?)i.Attribute(XLink + "href"))
+                        .FirstOrDefault(h => !string.IsNullOrEmpty(h));
+
+                    return href == null ? null : _wb.ReadEntry(href);
+                }
+                return null;
             }
 
             public void SetImage(int row, int col, byte[] data)

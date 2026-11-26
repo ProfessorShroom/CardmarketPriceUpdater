@@ -59,7 +59,7 @@ namespace CardPriceUpdaterGui
 
         private void Log(string msg)
         {
-            _log?.Invoke($"[{DateTime.Now:HH:mm:ss}] {msg}");
+            _log?.Invoke(msg);
         }
 
         private static readonly Dictionary<GameType, string> PRICE_GUIDE_URLS = new()
@@ -236,7 +236,11 @@ namespace CardPriceUpdaterGui
                 }
 
                 if (ods != null) ods.Save(temp);
-                else pkg!.Save();
+                else
+                {
+                    XlsxFormulas.Recalculate(pkg!);
+                    pkg!.Save();
+                }
                 File.Copy(temp, workbookPath, true);
 
                 if (missing.Count > 0)
@@ -254,42 +258,8 @@ namespace CardPriceUpdaterGui
         private static bool IsOds(string path) =>
             string.Equals(Path.GetExtension(path), ".ods", StringComparison.OrdinalIgnoreCase);
 
-        private void CreateRotatingBackup(string workbookPath)
-        {
-            string? dir = Path.GetDirectoryName(Path.GetFullPath(workbookPath));
-            dir ??= Directory.GetCurrentDirectory();
-            string backupDir = Path.Combine(dir, "Backups");
-            Directory.CreateDirectory(backupDir);
-
-            string fileName = Path.GetFileName(workbookPath);
-            string timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-            string backupPath = Path.Combine(backupDir, $"{fileName}.{timestamp}.bak");
-
-            File.Copy(workbookPath, backupPath, true);
-            Log($"Backup created: {backupPath}");
-
-            if (_backupRetentionCount <= 0)
-                return;
-
-            var oldBackups = new DirectoryInfo(backupDir)
-                .GetFiles($"{fileName}.*.bak")
-                .OrderByDescending(f => f.CreationTimeUtc)
-                .Skip(_backupRetentionCount)
-                .ToList();
-
-            foreach (var old in oldBackups)
-            {
-                try
-                {
-                    old.Delete();
-                    Log($"Pruned old backup: {old.Name}");
-                }
-                catch (Exception ex)
-                {
-                    Log($"Could not prune old backup {old.Name}: {ex.Message}");
-                }
-            }
-        }
+        private void CreateRotatingBackup(string workbookPath) =>
+            Backups.Create(workbookPath, _backupRetentionCount, Log);
 
         private async Task<JsonDocument> DownloadPriceGuideAsync(HttpClient http, GameType game)
         {

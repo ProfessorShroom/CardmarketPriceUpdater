@@ -20,7 +20,7 @@ namespace Cardmarket_Price_Updater.Core
         public const double CmPerInch = 2.54;
     }
 
-    internal static class ImageInfo
+    public static class ImageInfo
     {
         public static bool IsJpeg(byte[] d) => d.Length > 3 && d[0] == 0xFF && d[1] == 0xD8;
 
