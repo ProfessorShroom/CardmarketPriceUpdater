@@ -183,6 +183,29 @@ Run the executable from a terminal using these commands for headless use (same o
 
 #### Latest Update
 
+**Version 4.0.0.0 - The Collection Update**
+
+- **_4.0.0.0_** Added a Collection tab that shows every card in a spreadsheet as a tile with its image, set, rarity, price, edition and what you paid for it.
+- **_4.0.0.0_** Cards can be shown or hidden by status (Owned, Needs upgrade, Not owned), with quick Only upgrades / Only not owned / Show all buttons.
+- **_4.0.0.0_** Added search by name, set name, set code, rarity or Cardmarket ID, a game filter, and sorting by price, release date, set or status.
+- **_4.0.0.0_** Added a summary bar with the value of the cards shown, collection value, amount spent, cost to complete and the percentage owned.
+- **_4.0.0.0_** Cards can be edited from the Collection tab: click a card to set its Edition and Bought For, then save straight back to the spreadsheet. A backup is made before the first change to each file, and saving is refused while the file is open in LibreOffice or Excel.
+- **_4.0.0.0_** Added an Add image button to the card editor for cards whose image couldn't be downloaded. Pick a JPG, PNG, WebP, BMP or GIF and it is placed in the card's Image cell, replacing any existing picture, and saved to the image cache. Large images are shrunk automatically.
+- **_4.0.0.0_** Cards you pulled yourself can be marked as Pulled in the card editor. This saves "Pulled" in Bought For instead of a price, counts as nothing spent, and the summary bar shows how many cards you pulled and what they're worth.
+- **_4.0.0.0_** Edition badges use the same colours as the template: PSA10 is purple with gold, PSA9 is purple, upgrades are blue, owned is green and not owned is red.
+- **_4.0.0.0_** The main window now has two tabs, Update Prices and Collection, and opens larger.
+- **_4.0.0.0_** After a price update the Collection tab loads the updated spreadsheet so the new prices show straight away.
+- **_4.0.0.0_** Totals such as Collection Value and Amount Spent are now correct when the spreadsheet is opened after an update, instead of showing old values until it is recalculated.
+- **_4.0.0.0_** The template's Bought For colouring now shows Pulled in green instead of red.
+- **_4.0.0.0_** Log lines in the app and the CLI no longer show the time twice.
+- **_4.0.0.0_** The template's Total Cards now counts every card rather than only owned ones, so % of Cards Owned is correct.
+
+
+#### Older Updates
+
+<details markdown="1">
+<summary><strong>Version 3.x - The .NET 10 Update</strong></summary>
+
 **Version 3.0.0.0 - The .NET 10 Update**
 
 - **_3.0.0.0_** Upgraded from .NET 8 to .NET 10.
@@ -195,8 +218,7 @@ Run the executable from a terminal using these commands for headless use (same o
 - **_3.0.0.0_** Corrected the license, links and release information in the Flatpak metadata.
 - **_3.0.0.0_** Removed the leftover Flathub packaging (`nuget-sources.json`, the Flathub manifest and its docs). The Flatpak download on the releases page is unaffected.
 
-
-#### Older Updates
+</details>
 
 <details markdown="1">
 <summary><strong>Version 2.x - The .NET 8 / Avalonia Update</strong></summary>
