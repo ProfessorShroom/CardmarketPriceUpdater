@@ -32,7 +32,7 @@ jobs:
       - name: Install LibreOffice
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libreoffice-calc fonts-ubuntu fonts-noto-color-emoji imagemagick
+          sudo apt-get install -y --no-install-recommends libreoffice-calc libreoffice-draw fonts-ubuntu fonts-noto-color-emoji imagemagick
 
       # LibreOffice opens the sheet, recalculates every formula (the price
       # updater writes new prices but doesn't recalculate totals), and saves the
@@ -57,11 +57,21 @@ jobs:
 
       - name: Render Template.ods to PNG
         run: |
+          PROFILE="$RUNNER_TEMP/lo-profile-png"
+          mkdir -p "$PROFILE/user"
+          cat > "$PROFILE/user/registrymodifications.xcu" <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <oor:items xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+          <item oor:path="/org.openoffice.Office.Calc/Formula/Load"><prop oor:name="ODFRecalcMode" oor:op="fuse"><value>0</value></prop></item>
+          <item oor:path="/org.openoffice.Setup/L10N"><prop oor:name="ooSetupSystemLocale" oor:op="fuse"><value>en-GB</value></prop></item>
+          </oor:items>
+          EOF
           python3 scripts/template-print-range.py Template.ods "$RUNNER_TEMP/Spreadsheet.ods"
-          soffice -env:UserInstallation="file://$RUNNER_TEMP/lo-profile" --headless \
+          soffice -env:UserInstallation="file://$PROFILE" --headless \
             --convert-to png --outdir "$RUNNER_TEMP" "$RUNNER_TEMP/Spreadsheet.ods"
-          convert "$RUNNER_TEMP/Spreadsheet.png" -fuzz 2% -trim +repage -strip \
-            -define png:exclude-chunks=date,time images/cardmarketPriceUpdaterSpreadsheet.png
+          convert "$RUNNER_TEMP/Spreadsheet.png" -background white -alpha remove -alpha off \
+            -fuzz 2% -trim +repage -strip -define png:exclude-chunks=date,time \
+            images/cardmarketPriceUpdaterSpreadsheet.png
 
       - name: Commit README.md and card images
         id: commit
