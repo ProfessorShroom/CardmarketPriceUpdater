@@ -10,6 +10,7 @@ on:
     paths:
       - "Template.ods"
       - "scripts/template-to-readme.py"
+      - "scripts/template-print-range.py"
       - ".github/workflows/update-readme-template.yml"
   workflow_dispatch:
 
@@ -31,7 +32,7 @@ jobs:
       - name: Install LibreOffice
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libreoffice-calc
+          sudo apt-get install -y --no-install-recommends libreoffice-calc fonts-ubuntu fonts-noto-color-emoji imagemagick
 
       # LibreOffice opens the sheet, recalculates every formula (the price
       # updater writes new prices but doesn't recalculate totals), and saves the
@@ -54,10 +55,18 @@ jobs:
       - name: Update README.md
         run: python3 scripts/template-to-readme.py "$RUNNER_TEMP/Template.csv" Template.ods README.md
 
+      - name: Render Template.ods to PNG
+        run: |
+          python3 scripts/template-print-range.py Template.ods "$RUNNER_TEMP/Spreadsheet.ods"
+          soffice -env:UserInstallation="file://$RUNNER_TEMP/lo-profile" --headless \
+            --convert-to png --outdir "$RUNNER_TEMP" "$RUNNER_TEMP/Spreadsheet.ods"
+          convert "$RUNNER_TEMP/Spreadsheet.png" -fuzz 2% -trim +repage -strip \
+            -define png:exclude-chunks=date,time images/cardmarketPriceUpdaterSpreadsheet.png
+
       - name: Commit README.md and card images
         id: commit
         run: |
-          git add -A README.md images/template
+          git add -A README.md images/template images/cardmarketPriceUpdaterSpreadsheet.png
           if git diff --cached --quiet; then
             echo "README table unchanged."
             echo "changed=false" >> "$GITHUB_OUTPUT"
